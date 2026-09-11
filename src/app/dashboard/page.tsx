@@ -46,7 +46,9 @@ export default function Dashboard() {
 
   const carregarObrigacoes = async () => {
     try {
-      const userId = localStorage.getItem('userId') || ''
+      // TESTE: usar um userId fixo
+      const userId = 'user-teste-123'
+      
       const response = await fetch('/api/obrigacoes', {
         headers: {
           'x-user-id': userId
