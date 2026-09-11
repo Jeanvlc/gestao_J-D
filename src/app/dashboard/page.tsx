@@ -8,7 +8,6 @@ import {
   CheckCircle, 
   Clock, 
   Plus,
-  Filter
 } from 'lucide-react'
 import Link from 'next/link'
 import { format, isBefore, isToday, isTomorrow, addDays } from 'date-fns'
