@@ -2,7 +2,11 @@
   "compilerOptions": {
     "target": "es2020",
     "useDefineForClassFields": true,
-    "lib": ["es2020", "dom", "dom.iterable"],
+    "lib": [
+      "es2020",
+      "dom",
+      "dom.iterable"
+    ],
     "module": "esnext",
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -17,7 +21,9 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
     "allowJs": true,
     "incremental": true,
@@ -25,8 +31,16 @@
       {
         "name": "next"
       }
-    ]
+    ],
+    "noEmit": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

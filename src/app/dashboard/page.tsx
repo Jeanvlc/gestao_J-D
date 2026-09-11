@@ -2,12 +2,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { 
-  AlertCircle, 
-  Calendar, 
-  CheckCircle, 
-  Clock, 
+import {
+  AlertCircle,
+  Calendar,
+  CheckCircle,
+  Clock,
   Plus,
+  Users,
+  FileCog,
+  Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
 import { format, isBefore, isToday, addDays } from 'date-fns'
@@ -39,6 +42,8 @@ export default function Dashboard() {
   })
   const [carregando, setCarregando] = useState(true)
   const [filtro, setFiltro] = useState<string>('todos')
+  const [gerando, setGerando] = useState(false)
+  const [mensagemGeracao, setMensagemGeracao] = useState('')
 
   useEffect(() => {
     carregarObrigacoes()
@@ -62,6 +67,31 @@ export default function Dashboard() {
       console.error('Erro ao carregar obrigações:', error)
     } finally {
       setCarregando(false)
+    }
+  }
+
+  const gerarObrigacoesDoMes = async () => {
+    setGerando(true)
+    setMensagemGeracao('')
+    try {
+      const userId = 'user-teste-123'
+      const response = await fetch('/api/obrigacoes/gerar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId,
+        },
+      })
+      const resultado = await response.json()
+      if (!response.ok) throw new Error(resultado.error || 'Erro ao gerar')
+
+      setMensagemGeracao(`${resultado.criadas} obrigação(ões) gerada(s) para ${resultado.competencia}.`)
+      carregarObrigacoes()
+    } catch (error) {
+      console.error('Erro ao gerar obrigações:', error)
+      setMensagemGeracao('Não foi possível gerar as obrigações do mês.')
+    } finally {
+      setGerando(false)
     }
   }
 
@@ -135,19 +165,51 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
           <div>
             <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
             <p className="text-slate-400">Gestão de Obrigações - MacContab</p>
           </div>
-          <Link 
-            href="/obrigacoes/novo"
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-          >
-            <Plus className="w-5 h-5" />
-            Nova Obrigação
-          </Link>
+          <div className="flex gap-3 flex-wrap">
+            <Link
+              href="/clientes"
+              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white px-4 py-3 rounded-lg font-semibold transition"
+            >
+              <Users className="w-5 h-5" />
+              Clientes
+            </Link>
+            <Link
+              href="/modelos-obrigacao"
+              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white px-4 py-3 rounded-lg font-semibold transition"
+            >
+              <FileCog className="w-5 h-5" />
+              Modelos
+            </Link>
+            <button
+              onClick={gerarObrigacoesDoMes}
+              disabled={gerando}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-3 rounded-lg font-semibold transition"
+            >
+              <Sparkles className="w-5 h-5" />
+              {gerando ? 'Gerando...' : 'Gerar Obrigações do Mês'}
+            </button>
+            <Link
+              href="/obrigacoes/novo"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+            >
+              <Plus className="w-5 h-5" />
+              Nova Obrigação
+            </Link>
+          </div>
         </div>
+
+        {mensagemGeracao ? (
+          <div className="bg-purple-900/40 border border-purple-700 text-purple-200 px-4 py-3 rounded-lg mb-8">
+            {mensagemGeracao}
+          </div>
+        ) : (
+          <div className="mb-4" />
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">

@@ -18,6 +18,56 @@ model User {
   obrigacoes Obrigacao[]
   processos  Processo[]
   tarefas    Tarefa[]
+  clientes   Cliente[]
+  modelosObrigacao ModeloObrigacao[]
+}
+
+// simples_nacional, lucro_presumido, lucro_real, mei, pessoa_fisica, produtor_rural
+model Cliente {
+  id               String   @id @default(cuid())
+  nome             String
+  cnpjCpf          String?
+  regimeTributario String
+  cidade           String?
+  estado           String?
+  ativo            Boolean  @default(true)
+
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  obrigacoes       Obrigacao[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([regimeTributario])
+}
+
+// Modelo de obrigação recorrente: gera 1 Obrigacao por Cliente/competência
+// quando o cliente do regime/cidade do modelo bate com o cliente.
+model ModeloObrigacao {
+  id               String   @id @default(cuid())
+  titulo           String
+  descricao        String?
+  tags             String[]
+  diaVencimento    Int      // dia do mês em que a obrigação vence
+  periodicidade    String   @default("mensal") // mensal, trimestral, anual
+  prioridade       String   @default("normal")
+  regimeTributario String?  // null = vale para qualquer regime
+  cidade           String?  // null = vale para qualquer cidade
+  ativo            Boolean  @default(true)
+
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  obrigacoesGeradas Obrigacao[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([regimeTributario])
 }
 
 model Obrigacao {
@@ -32,16 +82,25 @@ model Obrigacao {
   tags          String[] // ISS, IR, SPED, ICMS, EFD, etc
   linkDocumento String?
   dataAtendimento DateTime?
-  
+
+  clienteId     String?
+  clienteRef    Cliente?  @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+
+  modeloId      String?
+  modelo        ModeloObrigacao? @relation(fields: [modeloId], references: [id], onDelete: SetNull)
+  competencia   String?  // "YYYY-MM" do mês em que essa obrigação foi gerada, evita duplicar geração
+
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   @@index([userId])
   @@index([vencimento])
   @@index([status])
+  @@index([clienteId])
+  @@unique([modeloId, clienteId, competencia])
 }
 
 model Processo {
