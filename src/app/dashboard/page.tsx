@@ -10,7 +10,7 @@ import {
   Plus,
 } from 'lucide-react'
 import Link from 'next/link'
-import { format, isBefore, isToday, isTomorrow, addDays } from 'date-fns'
+import { format, isBefore, isToday, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 interface Obrigacao {
