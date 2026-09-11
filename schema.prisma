@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  senha     String
+  nome      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  obrigacoes Obrigacao[]
+  processos  Processo[]
+  tarefas    Tarefa[]
+}
+
+model Obrigacao {
+  id            String   @id @default(cuid())
+  titulo        String
+  descricao     String?
+  vencimento    DateTime
+  periodicidade String?  // "mensal", "trimestral", "anual", "unica"
+  status        String   @default("pendente") // pendente, em_andamento, concluida, atrasada
+  prioridade    String   @default("normal") // baixa, normal, alta
+  cliente       String?
+  tags          String[] // ISS, IR, SPED, ICMS, EFD, etc
+  linkDocumento String?
+  dataAtendimento DateTime?
+  
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([vencimento])
+  @@index([status])
+}
+
+model Processo {
+  id            String   @id @default(cuid())
+  nome          String
+  descricao     String?
+  descricaoDetalhada String?
+  etapas        Etapa[]
+  status        String   @default("ativo") // ativo, inativo, concluido
+  responsavel   String?
+  frequencia    String?  // "mensal", "trimestral", "anual", "unica", "ocasional"
+  tempoMedio    String?  // "1h", "2h", "1d", etc
+  documentacao  String?  // URL ou arquivo
+  
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+}
+
+model Etapa {
+  id            String   @id @default(cuid())
+  titulo        String
+  descricao     String?
+  ordem         Int
+  concluida     Boolean  @default(false)
+  dataConclisao DateTime?
+  notas         String?
+  
+  processoId    String
+  processo      Processo @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([processoId])
+}
+
+model Tarefa {
+  id            String   @id @default(cuid())
+  titulo        String
+  descricao     String?
+  dataVencimento DateTime?
+  status        String   @default("pendente") // pendente, em_progresso, concluida
+  prioridade    String   @default("normal")
+  categoria     String?  // "Urgente", "Importante", "Rotina", etc
+  
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+}
