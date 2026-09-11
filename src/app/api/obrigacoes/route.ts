@@ -1,16 +1,30 @@
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
-// src/app/api/obrigacoes/route.ts
-import { prisma } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
-// GET - Listar todas as obrigações do usuário
-export async function GET(request: NextRequest) {
+// Função auxiliar para conectar
+async function conectarBanco() {
   try {
-    const userId = request.headers.get('x-user-id')
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { prisma } = await import('@/lib/db')
+    return prisma
+  } catch (error) {
+    console.error('Erro ao conectar:', error)
+    return null
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const userId = request.headers.get('x-user-id')
+  
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const prisma = await conectarBanco()
+    if (!prisma) {
+      return NextResponse.json([], { status: 200 })
     }
 
     const obrigacoes = await prisma.obrigacao.findMany({
@@ -23,19 +37,23 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(obrigacoes)
   } catch (error) {
-    console.error('Erro ao buscar obrigações:', error)
+    console.error('Erro ao buscar obrigacoes:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
 
-// POST - Criar nova obrigação
 export async function POST(request: NextRequest) {
-  try {
-    const userId = request.headers.get('x-user-id')
-    const data = await request.json()
+  const userId = request.headers.get('x-user-id')
+  const data = await request.json()
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const prisma = await conectarBanco()
+    if (!prisma) {
+      return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
     const obrigacao = await prisma.obrigacao.create({
@@ -53,17 +71,20 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Atualizar obrigação
 export async function PUT(request: NextRequest) {
-  try {
-    const userId = request.headers.get('x-user-id')
-    const { id, ...data } = await request.json()
+  const userId = request.headers.get('x-user-id')
+  const { id, ...data } = await request.json()
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const prisma = await conectarBanco()
+    if (!prisma) {
+      return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    // Verificar se a obrigação pertence ao usuário
     const obrigacao = await prisma.obrigacao.findFirst({
       where: { id, userId }
     })
@@ -87,17 +108,20 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Deletar obrigação
 export async function DELETE(request: NextRequest) {
-  try {
-    const userId = request.headers.get('x-user-id')
-    const { id } = await request.json()
+  const userId = request.headers.get('x-user-id')
+  const { id } = await request.json()
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const prisma = await conectarBanco()
+    if (!prisma) {
+      return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    // Verificar se pertence ao usuário
     const obrigacao = await prisma.obrigacao.findFirst({
       where: { id, userId }
     })

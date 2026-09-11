@@ -1,16 +1,30 @@
 export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
-// src/app/api/processos/route.ts
-import { prisma } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
-// GET - Listar todos os processos do usuário
-export async function GET(request: NextRequest) {
+// Função auxiliar para conectar
+async function conectarBanco() {
   try {
-    const userId = request.headers.get('x-user-id')
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { prisma } = await import('@/lib/db')
+    return prisma
+  } catch (error) {
+    console.error('Erro ao conectar:', error)
+    return null
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const userId = request.headers.get('x-user-id')
+  
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const prisma = await conectarBanco()
+    if (!prisma) {
+      return NextResponse.json([], { status: 200 })
     }
 
     const processos = await prisma.processo.findMany({
@@ -30,14 +44,18 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Criar novo processo
 export async function POST(request: NextRequest) {
-  try {
-    const userId = request.headers.get('x-user-id')
-    const data = await request.json()
+  const userId = request.headers.get('x-user-id')
+  const data = await request.json()
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const prisma = await conectarBanco()
+    if (!prisma) {
+      return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
     const processo = await prisma.processo.create({
@@ -67,14 +85,18 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Atualizar processo
 export async function PUT(request: NextRequest) {
-  try {
-    const userId = request.headers.get('x-user-id')
-    const { id, ...data } = await request.json()
+  const userId = request.headers.get('x-user-id')
+  const { id, ...data } = await request.json()
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const prisma = await conectarBanco()
+    if (!prisma) {
+      return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
     const processo = await prisma.processo.findFirst({
@@ -106,14 +128,18 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Deletar processo
 export async function DELETE(request: NextRequest) {
-  try {
-    const userId = request.headers.get('x-user-id')
-    const { id } = await request.json()
+  const userId = request.headers.get('x-user-id')
+  const { id } = await request.json()
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const prisma = await conectarBanco()
+    if (!prisma) {
+      return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
     const processo = await prisma.processo.findFirst({
