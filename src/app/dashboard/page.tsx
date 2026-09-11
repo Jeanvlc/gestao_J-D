@@ -55,7 +55,7 @@ export default function Dashboard() {
       })
       
       const dados = await response.json()
-      setObrigacoes(dados)
+      setObrigacoes(Array.isArray(dados) ? dados : [])
       calcularStats(dados)
     } catch (error) {
       console.error('Erro ao carregar obrigações:', error)
