@@ -15,8 +15,6 @@ interface Modelo {
   ativo: boolean
 }
 
-const USER_ID = 'user-teste-123'
-
 const REGIME_LABELS: Record<string, string> = {
   simples_nacional: 'Simples Nacional',
   lucro_presumido: 'Lucro Presumido',
@@ -31,7 +29,7 @@ export default function ModelosObrigacaoPage() {
   const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
-    fetch('/api/modelos-obrigacao', { headers: { 'x-user-id': USER_ID } })
+    fetch('/api/modelos-obrigacao')
       .then(res => res.json())
       .then(dados => setModelos(Array.isArray(dados) ? dados : []))
       .catch(err => console.error('Erro ao carregar modelos:', err))

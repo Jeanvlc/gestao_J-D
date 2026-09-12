@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 
-const USER_ID = 'user-teste-123'
-
 export default function DetalheModelo({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [carregando, setCarregando] = useState(true)
@@ -27,7 +25,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
   })
 
   useEffect(() => {
-    fetch(`/api/modelos-obrigacao/${params.id}`, { headers: { 'x-user-id': USER_ID } })
+    fetch(`/api/modelos-obrigacao/${params.id}`)
       .then(res => {
         if (!res.ok) {
           setEncontrado(false)
@@ -73,7 +71,6 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': USER_ID,
         },
         body: JSON.stringify({
           titulo: form.titulo,
@@ -103,7 +100,6 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
     try {
       const response = await fetch(`/api/modelos-obrigacao/${params.id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': USER_ID },
       })
       if (!response.ok) throw new Error('Erro ao excluir')
       router.push('/modelos-obrigacao')

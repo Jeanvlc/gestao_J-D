@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getUsuarioAtual } from '@/lib/auth'
 
 async function conectarBanco() {
   try {
@@ -31,7 +32,8 @@ function dataVencimento(competencia: string, diaVencimento: number) {
 // Gera 1 Obrigacao por Cliente ativo x ModeloObrigacao ativo aplicável
 // (regime/cidade do modelo batendo com o cliente), para a competência informada.
 export async function POST(request: NextRequest) {
-  const userId = request.headers.get('x-user-id')
+  const usuario = await getUsuarioAtual()
+  const userId = usuario?.id
 
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

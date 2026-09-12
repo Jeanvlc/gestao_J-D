@@ -38,13 +38,10 @@ export default function NovaObrigacao() {
 
     setSalvando(true)
     try {
-      const userId = 'user-teste-123'
-
       const response = await fetch('/api/obrigacoes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': userId,
         },
         body: JSON.stringify({
           titulo: form.titulo,

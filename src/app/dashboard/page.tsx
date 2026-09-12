@@ -11,10 +11,13 @@ import {
   Users,
   FileCog,
   Sparkles,
+  LogOut,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { format, isBefore, isToday, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { createClient } from '@/lib/supabase/client'
 
 interface Obrigacao {
   id: string
@@ -33,6 +36,7 @@ interface Stats {
 }
 
 export default function Dashboard() {
+  const router = useRouter()
   const [obrigacoes, setObrigacoes] = useState<Obrigacao[]>([])
   const [stats, setStats] = useState<Stats>({
     atrasadas: 0,
@@ -51,14 +55,7 @@ export default function Dashboard() {
 
   const carregarObrigacoes = async () => {
     try {
-      // TESTE: usar um userId fixo
-      const userId = 'user-teste-123'
-      
-      const response = await fetch('/api/obrigacoes', {
-        headers: {
-          'x-user-id': userId
-        }
-      })
+      const response = await fetch('/api/obrigacoes')
       
       const dados = await response.json()
       setObrigacoes(Array.isArray(dados) ? dados : [])
@@ -74,12 +71,10 @@ export default function Dashboard() {
     setGerando(true)
     setMensagemGeracao('')
     try {
-      const userId = 'user-teste-123'
       const response = await fetch('/api/obrigacoes/gerar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': userId,
         },
       })
       const resultado = await response.json()
@@ -200,6 +195,18 @@ export default function Dashboard() {
               <Plus className="w-5 h-5" />
               Nova Obrigação
             </Link>
+            <button
+              onClick={async () => {
+                const supabase = createClient()
+                await supabase.auth.signOut()
+                router.push('/login')
+                router.refresh()
+              }}
+              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white px-4 py-3 rounded-lg font-semibold transition"
+            >
+              <LogOut className="w-5 h-5" />
+              Sair
+            </button>
           </div>
         </div>
 

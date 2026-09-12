@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 
-const USER_ID = 'user-teste-123'
-
 const REGIME_LABELS: Record<string, string> = {
   simples_nacional: 'Simples Nacional',
   lucro_presumido: 'Lucro Presumido',
@@ -33,7 +31,7 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
   })
 
   useEffect(() => {
-    fetch(`/api/clientes/${params.id}`, { headers: { 'x-user-id': USER_ID } })
+    fetch(`/api/clientes/${params.id}`)
       .then(res => {
         if (!res.ok) {
           setEncontrado(false)
@@ -75,7 +73,6 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': USER_ID,
         },
         body: JSON.stringify(form),
       })
@@ -95,7 +92,6 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
     try {
       const response = await fetch(`/api/clientes/${params.id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': USER_ID },
       })
       if (!response.ok) throw new Error('Erro ao excluir')
       router.push('/clientes')

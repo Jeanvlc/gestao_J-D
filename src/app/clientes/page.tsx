@@ -14,8 +14,6 @@ interface Cliente {
   ativo: boolean
 }
 
-const USER_ID = 'user-teste-123'
-
 const REGIME_LABELS: Record<string, string> = {
   simples_nacional: 'Simples Nacional',
   lucro_presumido: 'Lucro Presumido',
@@ -30,7 +28,7 @@ export default function ClientesPage() {
   const [carregando, setCarregando] = useState(true)
 
   useEffect(() => {
-    fetch('/api/clientes', { headers: { 'x-user-id': USER_ID } })
+    fetch('/api/clientes')
       .then(res => res.json())
       .then(dados => setClientes(Array.isArray(dados) ? dados : []))
       .catch(err => console.error('Erro ao carregar clientes:', err))

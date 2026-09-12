@@ -22,8 +22,6 @@ interface Obrigacao {
   dataAtendimento: string | null
 }
 
-const USER_ID = 'user-teste-123'
-
 function paraInputDate(iso: string) {
   return iso ? iso.slice(0, 10) : ''
 }
@@ -54,9 +52,7 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
   const carregar = async () => {
     setCarregando(true)
     try {
-      const response = await fetch(`/api/obrigacoes/${params.id}`, {
-        headers: { 'x-user-id': USER_ID },
-      })
+      const response = await fetch(`/api/obrigacoes/${params.id}`)
       if (!response.ok) {
         setObrigacao(null)
         return
@@ -93,7 +89,6 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': USER_ID,
         },
         body: JSON.stringify({
           titulo: form.titulo,
@@ -143,7 +138,6 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
     try {
       const response = await fetch(`/api/obrigacoes/${params.id}`, {
         method: 'DELETE',
-        headers: { 'x-user-id': USER_ID },
       })
       if (!response.ok) throw new Error('Erro ao excluir')
       router.push('/dashboard')

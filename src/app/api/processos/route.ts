@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getUsuarioAtual } from '@/lib/auth'
 
 // Função auxiliar para conectar
 async function conectarBanco() {
@@ -15,7 +16,8 @@ async function conectarBanco() {
 }
 
 export async function GET(request: NextRequest) {
-  const userId = request.headers.get('x-user-id')
+  const usuario = await getUsuarioAtual()
+  const userId = usuario?.id
   
   if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -45,7 +47,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const userId = request.headers.get('x-user-id')
+  const usuario = await getUsuarioAtual()
+  const userId = usuario?.id
   const data = await request.json()
 
   if (!userId) {
@@ -86,7 +89,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const userId = request.headers.get('x-user-id')
+  const usuario = await getUsuarioAtual()
+  const userId = usuario?.id
   const { id, ...data } = await request.json()
 
   if (!userId) {
@@ -129,7 +133,8 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const userId = request.headers.get('x-user-id')
+  const usuario = await getUsuarioAtual()
+  const userId = usuario?.id
   const { id } = await request.json()
 
   if (!userId) {

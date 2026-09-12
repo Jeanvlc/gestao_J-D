@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
-const USER_ID = 'user-teste-123'
-
 export default function NovoModelo() {
   const router = useRouter()
   const [salvando, setSalvando] = useState(false)
@@ -43,7 +41,6 @@ export default function NovoModelo() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': USER_ID,
         },
         body: JSON.stringify({
           titulo: form.titulo,
