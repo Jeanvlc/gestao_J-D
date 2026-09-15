@@ -24,6 +24,8 @@ model User {
   honorarios Honorario[]
   pagamentosHonorario PagamentoHonorario[]
   fechamentosMensais FechamentoMensal[]
+  lancamentosFinanceiros LancamentoFinanceiro[]
+  configuracoes Configuracao[]
 }
 
 // simples_nacional, lucro_presumido, lucro_real, mei, pessoa_fisica, produtor_rural
@@ -64,6 +66,7 @@ model Cliente {
   honorarios       Honorario[]
   pagamentosHonorario PagamentoHonorario[]
   fechamentosMensais FechamentoMensal[]
+  lancamentosFinanceiros LancamentoFinanceiro[]
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -71,6 +74,8 @@ model Cliente {
   @@index([userId])
   @@index([regimeTributario])
 }
+
+// (relação inversa de LancamentoFinanceiro.cliente vive no bloco Cliente acima)
 
 // Modelo de obrigação recorrente: gera 1 Obrigacao por Cliente/competência
 // quando o cliente do regime/cidade do modelo bate com o cliente.
@@ -82,7 +87,7 @@ model ModeloObrigacao {
   diaVencimento    Int      // dia do mês em que a obrigação vence
   periodicidade    String   @default("mensal") // mensal, trimestral, anual
   prioridade       String   @default("normal")
-  regimeTributario String?  // null = vale para qualquer regime
+  regimesTributarios String[] @default([]) // vazio = vale para qualquer regime
   estado           String?  // null = vale para qualquer estado
   cidade           String?  // null = vale para qualquer cidade
   // Critérios do motor de obrigações: null = indiferente, true/false = exige que o cliente tenha/não tenha
@@ -100,7 +105,6 @@ model ModeloObrigacao {
   updatedAt        DateTime @updatedAt
 
   @@index([userId])
-  @@index([regimeTributario])
 }
 
 model Obrigacao {
@@ -184,6 +188,7 @@ model Tarefa {
   status        String   @default("pendente") // pendente, em_progresso, concluida
   prioridade    String   @default("normal")
   categoria     String?  // "Urgente", "Importante", "Rotina", etc
+  checklist     Json     @default("[]") // [{ chave, label, concluido }]
 
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -271,4 +276,49 @@ model FechamentoMensal {
   @@index([userId])
   @@index([competencia])
   @@index([status])
+}
+
+// Configurações editáveis do usuário (aba Configurações), guardadas por chave:
+// "checklist_fechamento" -> [{ chave, label, critico }]
+// "checklist_tarefa"     -> [{ chave, label }]
+model Configuracao {
+  id        String   @id @default(cuid())
+  chave     String
+  valor     Json
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, chave])
+}
+
+// Lançamento financeiro do escritório (entradas e saídas), para DRE e fluxo de caixa simples.
+model LancamentoFinanceiro {
+  id          String   @id @default(cuid())
+  tipo        String   // "entrada" | "saida"
+  categoria   String
+  descricao   String?
+  valor       Float
+  data        DateTime
+  competencia String   // "YYYY-MM", derivado de `data`
+  origem      String?  // "manual" | "honorario" (gerado automaticamente ao marcar pagamento como pago)
+
+  pagamentoHonorarioId String? @unique
+
+  clienteId   String?
+  cliente     Cliente? @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([competencia])
+  @@index([tipo])
+  @@index([clienteId])
 }

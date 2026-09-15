@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Trash2 } from 'lucide-react'
 import AppShell from '@/components/AppShell'
+import { REGIMES_TRIBUTARIOS } from '@/lib/regimes'
 
 const ESTADOS = [
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB',
@@ -39,7 +40,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
     diaVencimento: '10',
     periodicidade: 'mensal',
     prioridade: 'normal',
-    regimeTributario: '',
+    regimesTributarios: [] as string[],
     estado: '',
     cidade: '',
     requerFuncionarios: '' as Tristate,
@@ -66,7 +67,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           diaVencimento: String(dados.diaVencimento ?? 10),
           periodicidade: dados.periodicidade ?? 'mensal',
           prioridade: dados.prioridade ?? 'normal',
-          regimeTributario: dados.regimeTributario ?? '',
+          regimesTributarios: Array.isArray(dados.regimesTributarios) ? dados.regimesTributarios : [],
           estado: dados.estado ?? '',
           cidade: dados.cidade ?? '',
           requerFuncionarios: booleanoParaTristate(dados.requerFuncionarios),
@@ -81,6 +82,15 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
 
   const atualizarCampo = (campo: string, valor: string | boolean) => {
     setForm(prev => ({ ...prev, [campo]: valor }))
+  }
+
+  const alternarRegime = (valor: string) => {
+    setForm(prev => ({
+      ...prev,
+      regimesTributarios: prev.regimesTributarios.includes(valor)
+        ? prev.regimesTributarios.filter(r => r !== valor)
+        : [...prev.regimesTributarios, valor],
+    }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,7 +117,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           diaVencimento: dia,
           periodicidade: form.periodicidade,
           prioridade: form.prioridade,
-          regimeTributario: form.regimeTributario || null,
+          regimesTributarios: form.regimesTributarios,
           estado: form.estado || null,
           cidade: form.cidade || null,
           requerFuncionarios: tristateParaBooleano(form.requerFuncionarios),
@@ -251,20 +261,23 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           </div>
 
           <div>
-            <label className="block text-slate-700 mb-2 font-semibold">Regime Tributário</label>
-            <select
-              value={form.regimeTributario}
-              onChange={e => atualizarCampo('regimeTributario', e.target.value)}
-              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
-            >
-              <option value="">Todos os regimes</option>
-              <option value="simples_nacional">Simples Nacional</option>
-              <option value="lucro_presumido">Lucro Presumido</option>
-              <option value="lucro_real">Lucro Real</option>
-              <option value="mei">MEI</option>
-              <option value="pessoa_fisica">Pessoa Física</option>
-              <option value="produtor_rural">Produtor Rural</option>
-            </select>
+            <label className="block text-slate-700 mb-2 font-semibold">Regimes Tributários</label>
+            <div className="border border-green-200 rounded-lg p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {REGIMES_TRIBUTARIOS.map(r => (
+                <label key={r.value} className="flex items-center gap-2 text-slate-700 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.regimesTributarios.includes(r.value)}
+                    onChange={() => alternarRegime(r.value)}
+                    className="w-4 h-4"
+                  />
+                  {r.label}
+                </label>
+              ))}
+            </div>
+            <p className="text-slate-500 text-sm mt-1">
+              Nenhum marcado = vale para todos os regimes.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

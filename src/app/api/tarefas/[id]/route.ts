@@ -31,17 +31,14 @@ export async function GET(
       return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    const modelo = await prisma.modeloObrigacao.findFirst({
-      where: { id: params.id, userId },
-    })
-
-    if (!modelo) {
-      return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
+    const tarefa = await prisma.tarefa.findFirst({ where: { id: params.id, userId } })
+    if (!tarefa) {
+      return NextResponse.json({ error: 'Não encontrada' }, { status: 404 })
     }
 
-    return NextResponse.json(modelo)
+    return NextResponse.json(tarefa)
   } catch (error) {
-    console.error('Erro ao buscar modelo:', error)
+    console.error('Erro ao buscar tarefa:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
@@ -64,45 +61,29 @@ export async function PUT(
       return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    const modelo = await prisma.modeloObrigacao.findFirst({
-      where: { id: params.id, userId },
-    })
-
-    if (!modelo) {
-      return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
+    const tarefa = await prisma.tarefa.findFirst({ where: { id: params.id, userId } })
+    if (!tarefa) {
+      return NextResponse.json({ error: 'Não encontrada' }, { status: 404 })
     }
 
-    const atualizado = await prisma.modeloObrigacao.update({
+    const atualizada = await prisma.tarefa.update({
       where: { id: params.id },
       data: {
-        titulo: data.titulo,
-        descricao: data.descricao || null,
-        tags: data.tags || [],
-        diaVencimento: Number(data.diaVencimento),
-        periodicidade: data.periodicidade || 'mensal',
-        prioridade: data.prioridade || 'normal',
-        regimesTributarios: Array.isArray(data.regimesTributarios) ? data.regimesTributarios : [],
-        estado: data.estado || null,
-        cidade: data.cidade || null,
-        requerFuncionarios: data.requerFuncionarios ?? null,
-        requerIcms: data.requerIcms ?? null,
-        requerRetencoes: data.requerRetencoes ?? null,
-        ativo: data.ativo ?? true,
+        titulo: data.titulo ?? tarefa.titulo,
+        descricao: data.descricao ?? tarefa.descricao,
+        dataVencimento: data.dataVencimento !== undefined
+          ? (data.dataVencimento ? new Date(data.dataVencimento) : null)
+          : tarefa.dataVencimento,
+        status: data.status ?? tarefa.status,
+        prioridade: data.prioridade ?? tarefa.prioridade,
+        categoria: data.categoria !== undefined ? data.categoria : tarefa.categoria,
+        checklist: data.checklist !== undefined ? data.checklist : (tarefa.checklist as any),
       },
     })
 
-    try {
-      const { recalcularObrigacoesCliente } = await import('@/lib/obrigacoesEngine')
-      const { prisma: db } = await import('@/lib/db')
-      const clientes = await db.cliente.findMany({ where: { userId, ativo: true }, select: { id: true } })
-      await Promise.all(clientes.map((c: { id: string }) => recalcularObrigacoesCliente(db, userId, c.id)))
-    } catch (err) {
-      console.error('Erro ao recalcular obrigações após editar modelo:', err)
-    }
-
-    return NextResponse.json(atualizado)
+    return NextResponse.json(atualizada)
   } catch (error) {
-    console.error('Erro ao atualizar modelo:', error)
+    console.error('Erro ao atualizar tarefa:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
@@ -124,19 +105,16 @@ export async function DELETE(
       return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    const modelo = await prisma.modeloObrigacao.findFirst({
-      where: { id: params.id, userId },
-    })
-
-    if (!modelo) {
-      return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
+    const tarefa = await prisma.tarefa.findFirst({ where: { id: params.id, userId } })
+    if (!tarefa) {
+      return NextResponse.json({ error: 'Não encontrada' }, { status: 404 })
     }
 
-    await prisma.modeloObrigacao.delete({ where: { id: params.id } })
+    await prisma.tarefa.delete({ where: { id: params.id } })
 
     return NextResponse.json({ sucesso: true })
   } catch (error) {
-    console.error('Erro ao deletar modelo:', error)
+    console.error('Erro ao deletar tarefa:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }

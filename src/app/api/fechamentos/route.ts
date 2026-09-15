@@ -3,7 +3,7 @@ export const fetchCache = 'force-no-store'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsuarioAtual } from '@/lib/auth'
-import { criarChecklistPadrao } from '@/lib/checklistFechamento'
+import { obterTemplateChecklistFechamento } from '@/lib/configuracoes'
 
 async function conectarBanco() {
   try {
@@ -55,25 +55,47 @@ export async function GET(request: NextRequest) {
 
     const faltantes = clientes.filter((c: { id: string }) => !porCliente.has(c.id))
     if (faltantes.length > 0) {
+      const template = await obterTemplateChecklistFechamento(prisma, userId)
+      const itensIniciais = template.map(item => ({ ...item, concluido: false }))
+
       await prisma.fechamentoMensal.createMany({
         data: faltantes.map((c: { id: string }) => ({
           clienteId: c.id,
           competencia,
           status: 'aberto',
-          itens: JSON.parse(JSON.stringify(criarChecklistPadrao())),
+          itens: JSON.parse(JSON.stringify(itensIniciais)),
           userId,
         })),
         skipDuplicates: true,
       })
     }
 
-    const fechamentos = await prisma.fechamentoMensal.findMany({
-      where: { userId, competencia },
-      include: { cliente: { select: { id: true, nome: true } } },
-      orderBy: { cliente: { nome: 'asc' } },
-    })
+    const [fechamentos, obrigacoesDaCompetencia] = await Promise.all([
+      prisma.fechamentoMensal.findMany({
+        where: { userId, competencia },
+        include: { cliente: { select: { id: true, nome: true } } },
+        orderBy: { cliente: { nome: 'asc' } },
+      }),
+      prisma.obrigacao.findMany({
+        where: { userId, competencia, clienteId: { in: clientes.map((c: { id: string }) => c.id) } },
+        select: { id: true, titulo: true, status: true, clienteId: true },
+      }),
+    ])
 
-    return NextResponse.json(fechamentos)
+    const obrigacoesPorCliente = new Map<string, typeof obrigacoesDaCompetencia>()
+    for (const obrig of obrigacoesDaCompetencia) {
+      if (!obrig.clienteId) continue
+      const lista = obrigacoesPorCliente.get(obrig.clienteId) ?? []
+      lista.push(obrig)
+      obrigacoesPorCliente.set(obrig.clienteId, lista)
+    }
+
+    const resultado = fechamentos.map((f: { clienteId: string }) => ({
+      ...f,
+      obrigacoes: obrigacoesPorCliente.get(f.clienteId) ?? [],
+    }))
+
+    return NextResponse.json(resultado)
   } catch (error) {
     console.error('Erro ao buscar fechamentos:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })

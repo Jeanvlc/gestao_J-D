@@ -11,7 +11,7 @@ type ClienteCriterios = {
 }
 
 type ModeloCriterios = {
-  regimeTributario: string | null
+  regimesTributarios: string[]
   cidade: string | null
   estado: string | null
   requerFuncionarios: boolean | null
@@ -20,7 +20,7 @@ type ModeloCriterios = {
 }
 
 export function modeloAplicavel(modelo: ModeloCriterios, cliente: ClienteCriterios): boolean {
-  const regimeBate = !modelo.regimeTributario || modelo.regimeTributario === cliente.regimeTributario
+  const regimeBate = !modelo.regimesTributarios || modelo.regimesTributarios.length === 0 || modelo.regimesTributarios.includes(cliente.regimeTributario)
   const estadoBate = !modelo.estado || modelo.estado === cliente.estado
   const cidadeBate = !modelo.cidade || modelo.cidade === cliente.cidade
   const funcionariosBate = modelo.requerFuncionarios === null || modelo.requerFuncionarios === undefined || modelo.requerFuncionarios === cliente.possuiFuncionarios

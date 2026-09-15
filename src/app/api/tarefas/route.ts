@@ -3,6 +3,7 @@ export const fetchCache = 'force-no-store'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsuarioAtual } from '@/lib/auth'
+import { obterTemplateChecklistTarefa } from '@/lib/configuracoes'
 
 async function conectarBanco() {
   try {
@@ -28,14 +29,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([], { status: 200 })
     }
 
-    const modelos = await prisma.modeloObrigacao.findMany({
+    const tarefas = await prisma.tarefa.findMany({
       where: { userId },
-      orderBy: { titulo: 'asc' },
+      orderBy: [{ status: 'asc' }, { dataVencimento: 'asc' }],
     })
 
-    return NextResponse.json(modelos)
+    return NextResponse.json(tarefas)
   } catch (error) {
-    console.error('Erro ao buscar modelos:', error)
+    console.error('Erro ao buscar tarefas:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
@@ -49,8 +50,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (!data.titulo || !data.diaVencimento) {
-    return NextResponse.json({ error: 'Título e dia de vencimento são obrigatórios' }, { status: 400 })
+  if (!data.titulo) {
+    return NextResponse.json({ error: 'Título é obrigatório' }, { status: 400 })
   }
 
   try {
@@ -59,28 +60,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    const modelo = await prisma.modeloObrigacao.create({
+    const template = await obterTemplateChecklistTarefa(prisma, userId)
+    const checklist = template.map(item => ({ ...item, concluido: false }))
+
+    const tarefa = await prisma.tarefa.create({
       data: {
         titulo: data.titulo,
         descricao: data.descricao || null,
-        tags: data.tags || [],
-        diaVencimento: Number(data.diaVencimento),
-        periodicidade: data.periodicidade || 'mensal',
+        dataVencimento: data.dataVencimento ? new Date(data.dataVencimento) : null,
+        status: data.status || 'pendente',
         prioridade: data.prioridade || 'normal',
-        regimesTributarios: Array.isArray(data.regimesTributarios) ? data.regimesTributarios : [],
-        estado: data.estado || null,
-        cidade: data.cidade || null,
-        requerFuncionarios: data.requerFuncionarios ?? null,
-        requerIcms: data.requerIcms ?? null,
-        requerRetencoes: data.requerRetencoes ?? null,
-        ativo: data.ativo ?? true,
+        categoria: data.categoria || null,
+        checklist: JSON.parse(JSON.stringify(checklist)),
         userId,
       },
     })
 
-    return NextResponse.json(modelo, { status: 201 })
+    return NextResponse.json(tarefa, { status: 201 })
   } catch (error) {
-    console.error('Erro ao criar modelo:', error)
+    console.error('Erro ao criar tarefa:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }

@@ -13,6 +13,7 @@ interface Fechamento {
   status: string
   itens: ItemChecklist[]
   cliente: { id: string; nome: string }
+  obrigacoes: { id: string; status: string }[]
 }
 
 function competenciaAtual() {
@@ -60,7 +61,8 @@ export default function FechamentoPage() {
     return { feitos, total }
   }
 
-  const temPendenciaCritica = (itens: ItemChecklist[]) => itens.some(i => i.critico && !i.concluido)
+  const temPendenciaCritica = (f: Fechamento) =>
+    f.itens.some(i => i.critico && !i.concluido) || f.obrigacoes.some(o => o.status !== 'concluida')
 
   return (
     <AppShell>
@@ -93,7 +95,7 @@ export default function FechamentoPage() {
           <div className="space-y-3">
             {fechamentos.map(f => {
               const { feitos, total } = progresso(f.itens)
-              const pendenciaCritica = f.status === 'aberto' && temPendenciaCritica(f.itens)
+              const pendenciaCritica = f.status === 'aberto' && temPendenciaCritica(f)
               return (
                 <Link
                   key={f.id}

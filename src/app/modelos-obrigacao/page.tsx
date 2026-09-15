@@ -5,25 +5,17 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import AppShell from '@/components/AppShell'
+import { REGIME_LABELS } from '@/lib/regimes'
 
 interface Modelo {
   id: string
   titulo: string
   diaVencimento: number
   periodicidade: string
-  regimeTributario: string | null
+  regimesTributarios: string[]
   estado: string | null
   cidade: string | null
   ativo: boolean
-}
-
-const REGIME_LABELS: Record<string, string> = {
-  simples_nacional: 'Simples Nacional',
-  lucro_presumido: 'Lucro Presumido',
-  lucro_real: 'Lucro Real',
-  mei: 'MEI',
-  pessoa_fisica: 'Pessoa Física',
-  produtor_rural: 'Produtor Rural',
 }
 
 export default function ModelosObrigacaoPage() {
@@ -76,7 +68,9 @@ export default function ModelosObrigacaoPage() {
                   <p className="text-slate-500 text-sm">
                     Vence todo dia {modelo.diaVencimento} · {modelo.periodicidade}
                     {' · '}
-                    {modelo.regimeTributario ? REGIME_LABELS[modelo.regimeTributario] ?? modelo.regimeTributario : 'Todos os regimes'}
+                    {modelo.regimesTributarios.length > 0
+                      ? modelo.regimesTributarios.map(r => REGIME_LABELS[r] ?? r).join(', ')
+                      : 'Todos os regimes'}
                     {modelo.estado ? ` · ${modelo.estado}` : ''}
                     {modelo.cidade ? ` · ${modelo.cidade}` : ' · Qualquer cidade'}
                   </p>

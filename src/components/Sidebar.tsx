@@ -7,7 +7,10 @@ import {
   Users,
   FileCog,
   Wallet,
+  Landmark,
   ClipboardCheck,
+  ListChecks,
+  Settings,
   Plus,
   LogOut,
 } from 'lucide-react'
@@ -17,8 +20,11 @@ const ITENS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/clientes', label: 'Clientes', icon: Users },
   { href: '/modelos-obrigacao', label: 'Modelos de Obrigação', icon: FileCog },
-  { href: '/honorarios', label: 'Financeiro', icon: Wallet },
+  { href: '/tarefas', label: 'Tarefas', icon: ListChecks },
+  { href: '/honorarios', label: 'Honorários', icon: Wallet },
+  { href: '/financeiro', label: 'Financeiro do Escritório', icon: Landmark },
   { href: '/fechamento', label: 'Fechamento Mensal', icon: ClipboardCheck },
+  { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ]
 
 export default function Sidebar() {

@@ -38,16 +38,42 @@ export async function PUT(
     }
 
     const status = data.status ?? pagamento.status
+    const dataPagamento = status === 'pago'
+      ? (data.dataPagamento ? new Date(data.dataPagamento) : new Date())
+      : null
+
     const atualizado = await prisma.pagamentoHonorario.update({
       where: { id: params.id },
       data: {
         status,
         observacoes: data.observacoes ?? pagamento.observacoes,
-        dataPagamento: status === 'pago'
-          ? (data.dataPagamento ? new Date(data.dataPagamento) : new Date())
-          : null,
+        dataPagamento,
       },
     })
+
+    // Mantém o lançamento financeiro (entrada) em sincronia com o status do pagamento.
+    if (status === 'pago' && pagamento.status !== 'pago') {
+      const dataLancamento = dataPagamento ?? new Date()
+      const competencia = `${dataLancamento.getFullYear()}-${String(dataLancamento.getMonth() + 1).padStart(2, '0')}`
+      await prisma.lancamentoFinanceiro.upsert({
+        where: { pagamentoHonorarioId: params.id },
+        update: { valor: atualizado.valor, data: dataLancamento, competencia },
+        create: {
+          tipo: 'entrada',
+          categoria: 'Honorários',
+          descricao: `Honorário - competência ${atualizado.competencia}`,
+          valor: atualizado.valor,
+          data: dataLancamento,
+          competencia,
+          origem: 'honorario',
+          pagamentoHonorarioId: params.id,
+          clienteId: atualizado.clienteId,
+          userId,
+        },
+      })
+    } else if (status !== 'pago' && pagamento.status === 'pago') {
+      await prisma.lancamentoFinanceiro.deleteMany({ where: { pagamentoHonorarioId: params.id } })
+    }
 
     return NextResponse.json(atualizado)
   } catch (error) {
@@ -78,6 +104,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
     }
 
+    await prisma.lancamentoFinanceiro.deleteMany({ where: { pagamentoHonorarioId: params.id } })
     await prisma.pagamentoHonorario.delete({ where: { id: params.id } })
 
     return NextResponse.json({ sucesso: true })

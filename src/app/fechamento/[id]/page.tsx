@@ -9,6 +9,13 @@ import { ptBR } from 'date-fns/locale'
 import AppShell from '@/components/AppShell'
 import type { ItemChecklist } from '@/lib/checklistFechamento'
 
+interface ObrigacaoResumo {
+  id: string
+  titulo: string
+  status: string
+  vencimento: string
+}
+
 interface Fechamento {
   id: string
   competencia: string
@@ -18,6 +25,7 @@ interface Fechamento {
   autorizadoPor: string | null
   fechadoEm: string | null
   cliente: { id: string; nome: string }
+  obrigacoes: ObrigacaoResumo[]
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -233,6 +241,32 @@ export default function DetalheFechamento({ params }: { params: { id: string } }
             ))}
           </div>
         </div>
+
+        {fechamento.obrigacoes.length > 0 && (
+          <div className="bg-white rounded-lg p-6 border border-green-100 shadow-sm mt-4">
+            <p className="text-slate-700 font-semibold mb-4">
+              Obrigações desta competência ({fechamento.obrigacoes.filter(o => o.status === 'concluida').length}/{fechamento.obrigacoes.length})
+            </p>
+            <div className="space-y-2">
+              {fechamento.obrigacoes.map(o => (
+                <Link
+                  key={o.id}
+                  href={`/obrigacoes/${o.id}`}
+                  className={`flex items-center justify-between p-3 rounded-lg border transition hover:bg-green-50 ${
+                    o.status === 'concluida' ? 'bg-green-50 border-green-200' : 'bg-white border-green-100'
+                  }`}
+                >
+                  <span className="text-slate-800">{o.titulo}</span>
+                  <span className={`text-xs font-bold uppercase px-2 py-1 rounded-full ${
+                    o.status === 'concluida' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {o.status}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {aberto && (
           <div className="bg-white rounded-lg p-6 border border-green-100 shadow-sm mt-4">

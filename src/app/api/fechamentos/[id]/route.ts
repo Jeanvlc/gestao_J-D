@@ -40,7 +40,13 @@ export async function GET(
       return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
     }
 
-    return NextResponse.json(fechamento)
+    const obrigacoes = await prisma.obrigacao.findMany({
+      where: { userId, clienteId: fechamento.clienteId, competencia: fechamento.competencia },
+      select: { id: true, titulo: true, status: true, vencimento: true },
+      orderBy: { vencimento: 'asc' },
+    })
+
+    return NextResponse.json({ ...fechamento, obrigacoes })
   } catch (error) {
     console.error('Erro ao buscar fechamento:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })

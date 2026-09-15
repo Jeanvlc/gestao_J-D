@@ -40,20 +40,35 @@ export async function POST(
     }
 
     const itens = fechamento.itens as unknown as ItemChecklist[]
-    const pendencias = pendenciasCriticas(itens)
+    const pendenciasChecklist = pendenciasCriticas(itens).map(p => p.label)
+
+    const obrigacoesPendentes = await prisma.obrigacao.findMany({
+      where: {
+        userId,
+        clienteId: fechamento.clienteId,
+        competencia: fechamento.competencia,
+        status: { not: 'concluida' },
+      },
+      select: { titulo: true },
+    })
+    const pendenciasObrigacoes = obrigacoesPendentes.map((o: { titulo: string }) => `Obrigação pendente: ${o.titulo}`)
+
+    const todasPendencias = [...pendenciasChecklist, ...pendenciasObrigacoes]
 
     const justificativa = (data.justificativa || '').trim()
     const autorizadoPor = (data.autorizadoPor || '').trim()
 
-    if (pendencias.length > 0 && (!justificativa || !autorizadoPor)) {
+    if (todasPendencias.length > 0 && (!justificativa || !autorizadoPor)) {
       return NextResponse.json(
         {
           error: 'Existem pendências críticas. Informe justificativa e quem autoriza para fechar mesmo assim.',
-          pendencias: pendencias.map(p => p.label),
+          pendencias: todasPendencias,
         },
         { status: 409 }
       )
     }
+
+    const pendencias = todasPendencias
 
     const atualizado = await prisma.fechamentoMensal.update({
       where: { id: params.id },
