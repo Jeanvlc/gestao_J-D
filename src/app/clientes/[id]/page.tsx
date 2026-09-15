@@ -198,12 +198,12 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
     return (
       <AppShell>
         <div className="max-w-3xl mx-auto">
-          <Link href="/clientes" className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-6">
+          <Link href="/clientes" className="flex items-center gap-2 text-slate-500 hover:text-green-700 transition mb-6">
             <ArrowLeft className="w-4 h-4" />
             Voltar aos Clientes
           </Link>
-          <div className="bg-slate-700 rounded-lg p-8 text-center">
-            <p className="text-slate-300 text-lg">Cliente não encontrado.</p>
+          <div className="bg-white rounded-lg p-8 text-center border border-green-100 shadow-sm">
+            <p className="text-slate-600 text-lg">Cliente não encontrado.</p>
           </div>
         </div>
       </AppShell>
@@ -214,7 +214,7 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
     <AppShell>
       <div className="max-w-3xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <Link href="/clientes" className="flex items-center gap-2 text-slate-400 hover:text-white transition">
+          <Link href="/clientes" className="flex items-center gap-2 text-slate-500 hover:text-green-700 transition">
             <ArrowLeft className="w-4 h-4" />
             Voltar aos Clientes
           </Link>
@@ -227,90 +227,90 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
           </button>
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-8">Editar Cliente</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-8">Editar Cliente</h1>
 
-        <form onSubmit={handleSubmit} className="bg-slate-700 rounded-lg p-6 border border-slate-600 space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg p-6 border border-green-100 shadow-sm space-y-6">
           {erro && (
-            <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               {erro}
             </div>
           )}
 
           <section className="space-y-4">
-            <h2 className="text-slate-200 font-bold uppercase text-xs tracking-wide">Identificação</h2>
+            <h2 className="text-green-700 font-bold uppercase text-xs tracking-wide">Identificação</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">CNPJ / CPF</label>
+                <label className="block text-slate-700 mb-2 font-semibold">CNPJ / CPF</label>
                 <input
                   type="text"
                   value={form.cnpjCpf}
                   onChange={e => atualizarCampo('cnpjCpf', e.target.value)}
                   placeholder="00.000.000/0000-00"
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
               <button
                 type="button"
                 onClick={buscarCnpj}
                 disabled={buscandoCnpj}
-                className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-semibold transition whitespace-nowrap"
+                className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg font-semibold transition whitespace-nowrap"
               >
                 <Search className="w-4 h-4" />
                 {buscandoCnpj ? 'Buscando...' : 'Buscar CNPJ'}
               </button>
             </div>
-            {avisoCnpj && <p className="text-amber-300 text-sm">{avisoCnpj}</p>}
+            {avisoCnpj && <p className="text-amber-700 text-sm">{avisoCnpj}</p>}
 
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Nome (usado no sistema) *</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Nome (usado no sistema) *</label>
               <input
                 type="text"
                 value={form.nome}
                 onChange={e => atualizarCampo('nome', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Razão Social</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Razão Social</label>
                 <input
                   type="text"
                   value={form.razaoSocial}
                   onChange={e => atualizarCampo('razaoSocial', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Nome Fantasia</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Nome Fantasia</label>
                 <input
                   type="text"
                   value={form.nomeFantasia}
                   onChange={e => atualizarCampo('nomeFantasia', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Tipo de Pessoa</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Tipo de Pessoa</label>
                 <select
                   value={form.tipoPessoa}
                   onChange={e => atualizarCampo('tipoPessoa', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 >
                   <option value="juridica">Pessoa Jurídica</option>
                   <option value="fisica">Pessoa Física</option>
                 </select>
               </div>
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Regime Tributário *</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Regime Tributário *</label>
                 <select
                   value={form.regimeTributario}
                   onChange={e => atualizarCampo('regimeTributario', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 >
                   <option value="simples_nacional">Simples Nacional</option>
                   <option value="lucro_presumido">Lucro Presumido</option>
@@ -321,152 +321,152 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
                 </select>
               </div>
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Situação Cadastral</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Situação Cadastral</label>
                 <input
                   type="text"
                   value={form.situacaoCadastral}
                   onChange={e => atualizarCampo('situacaoCadastral', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Inscrição Estadual</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Inscrição Estadual</label>
                 <input
                   type="text"
                   value={form.inscricaoEstadual}
                   onChange={e => atualizarCampo('inscricaoEstadual', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Inscrição Municipal</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Inscrição Municipal</label>
                 <input
                   type="text"
                   value={form.inscricaoMunicipal}
                   onChange={e => atualizarCampo('inscricaoMunicipal', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Atividade Principal</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Atividade Principal</label>
               <input
                 type="text"
                 value={form.atividadePrincipal}
                 onChange={e => atualizarCampo('atividadePrincipal', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               />
             </div>
           </section>
 
-          <section className="space-y-4 border-t border-slate-600 pt-5">
-            <h2 className="text-slate-200 font-bold uppercase text-xs tracking-wide">Contato</h2>
+          <section className="space-y-4 border-t border-green-100 pt-5">
+            <h2 className="text-green-700 font-bold uppercase text-xs tracking-wide">Contato</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Responsável</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Responsável</label>
                 <input
                   type="text"
                   value={form.responsavel}
                   onChange={e => atualizarCampo('responsavel', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">E-mail</label>
+                <label className="block text-slate-700 mb-2 font-semibold">E-mail</label>
                 <input
                   type="email"
                   value={form.email}
                   onChange={e => atualizarCampo('email', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Telefone</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Telefone</label>
                 <input
                   type="text"
                   value={form.telefone}
                   onChange={e => atualizarCampo('telefone', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
             </div>
           </section>
 
-          <section className="space-y-4 border-t border-slate-600 pt-5">
-            <h2 className="text-slate-200 font-bold uppercase text-xs tracking-wide">Endereço</h2>
+          <section className="space-y-4 border-t border-green-100 pt-5">
+            <h2 className="text-green-700 font-bold uppercase text-xs tracking-wide">Endereço</h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">CEP</label>
+                <label className="block text-slate-700 mb-2 font-semibold">CEP</label>
                 <input
                   type="text"
                   value={form.cep}
                   onChange={e => atualizarCampo('cep', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-slate-300 mb-2 font-semibold">Logradouro</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Logradouro</label>
                 <input
                   type="text"
                   value={form.logradouro}
                   onChange={e => atualizarCampo('logradouro', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Número</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Número</label>
                 <input
                   type="text"
                   value={form.numero}
                   onChange={e => atualizarCampo('numero', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Complemento</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Complemento</label>
                 <input
                   type="text"
                   value={form.complemento}
                   onChange={e => atualizarCampo('complemento', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Bairro</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Bairro</label>
                 <input
                   type="text"
                   value={form.bairro}
                   onChange={e => atualizarCampo('bairro', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Cidade</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Cidade</label>
                 <input
                   type="text"
                   value={form.cidade}
                   onChange={e => atualizarCampo('cidade', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Estado</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Estado</label>
                 <select
                   value={form.estado}
                   onChange={e => atualizarCampo('estado', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 >
                   <option value="">Selecione</option>
                   {ESTADOS.map(uf => (
@@ -477,12 +477,12 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
             </div>
           </section>
 
-          <section className="space-y-3 border-t border-slate-600 pt-5">
-            <h2 className="text-slate-200 font-bold uppercase text-xs tracking-wide">
+          <section className="space-y-3 border-t border-green-100 pt-5">
+            <h2 className="text-green-700 font-bold uppercase text-xs tracking-wide">
               Perfil fiscal (usado para gerar obrigações automaticamente)
             </h2>
             <div className="flex flex-col sm:flex-row gap-4">
-              <label className="flex items-center gap-2 text-slate-300">
+              <label className="flex items-center gap-2 text-slate-600">
                 <input
                   type="checkbox"
                   checked={form.possuiFuncionarios}
@@ -491,7 +491,7 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
                 />
                 Possui funcionários
               </label>
-              <label className="flex items-center gap-2 text-slate-300">
+              <label className="flex items-center gap-2 text-slate-600">
                 <input
                   type="checkbox"
                   checked={form.possuiIcms}
@@ -500,7 +500,7 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
                 />
                 Contribuinte de ICMS
               </label>
-              <label className="flex items-center gap-2 text-slate-300">
+              <label className="flex items-center gap-2 text-slate-600">
                 <input
                   type="checkbox"
                   checked={form.possuiRetencoes}
@@ -510,22 +510,22 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
                 Sofre retenções (INSS/IR/etc)
               </label>
             </div>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-500 text-sm">
               Ao salvar, as obrigações pendentes deste mês são recalculadas automaticamente conforme esse perfil.
             </p>
           </section>
 
-          <section className="border-t border-slate-600 pt-5">
-            <label className="block text-slate-300 mb-2 font-semibold">Observações</label>
+          <section className="border-t border-green-100 pt-5">
+            <label className="block text-slate-700 mb-2 font-semibold">Observações</label>
             <textarea
               value={form.observacoes}
               onChange={e => atualizarCampo('observacoes', e.target.value)}
               rows={3}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
             />
           </section>
 
-          <label className="flex items-center gap-2 text-slate-300 border-t border-slate-600 pt-5">
+          <label className="flex items-center gap-2 text-slate-600 border-t border-green-100 pt-5">
             <input
               type="checkbox"
               checked={form.ativo}
@@ -538,7 +538,7 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
           <button
             type="submit"
             disabled={salvando}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition"
+            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             {salvando ? 'Salvando...' : 'Salvar Alterações'}
           </button>

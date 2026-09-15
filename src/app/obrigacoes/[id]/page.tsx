@@ -160,12 +160,12 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
     return (
       <AppShell>
         <div className="max-w-2xl mx-auto">
-          <Link href="/dashboard" className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-6">
+          <Link href="/dashboard" className="flex items-center gap-2 text-slate-500 hover:text-green-700 transition mb-6">
             <ArrowLeft className="w-4 h-4" />
             Voltar ao Dashboard
           </Link>
-          <div className="bg-slate-700 rounded-lg p-8 text-center">
-            <p className="text-slate-300 text-lg">Obrigação não encontrada.</p>
+          <div className="bg-white rounded-lg p-8 text-center border border-green-100 shadow-sm">
+            <p className="text-slate-600 text-lg">Obrigação não encontrada.</p>
           </div>
         </div>
       </AppShell>
@@ -176,7 +176,7 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
     <AppShell>
       <div className="max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <Link href="/dashboard" className="flex items-center gap-2 text-slate-400 hover:text-white transition">
+          <Link href="/dashboard" className="flex items-center gap-2 text-slate-500 hover:text-green-700 transition">
             <ArrowLeft className="w-4 h-4" />
             Voltar ao Dashboard
           </Link>
@@ -203,70 +203,70 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
         </div>
 
         {erro && (
-          <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
             {erro}
           </div>
         )}
 
         {obrigacao.status === 'concluida' && obrigacao.dataAtendimento && (
-          <div className="bg-green-900/40 border border-green-700 text-green-200 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4">
             Finalizada em{' '}
             {format(new Date(obrigacao.dataAtendimento), "dd MMM yyyy 'às' HH:mm", { locale: ptBR })}
           </div>
         )}
 
         {!editando ? (
-          <div className="bg-slate-700 rounded-lg p-6 border border-slate-600 space-y-4">
+          <div className="bg-white rounded-lg p-6 border border-green-200 space-y-4">
             <div className="flex justify-between items-start">
-              <h1 className="text-2xl font-bold text-white">{obrigacao.titulo}</h1>
+              <h1 className="text-2xl font-bold text-slate-900">{obrigacao.titulo}</h1>
               <button
                 onClick={() => setEditando(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition"
               >
                 Editar
               </button>
             </div>
 
             {obrigacao.descricao && (
-              <p className="text-slate-300">{obrigacao.descricao}</p>
+              <p className="text-slate-600">{obrigacao.descricao}</p>
             )}
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-slate-400">Vencimento</p>
-                <p className="text-white font-semibold">
+                <p className="text-slate-500">Vencimento</p>
+                <p className="text-slate-900 font-semibold">
                   {format(new Date(obrigacao.vencimento), 'dd MMM yyyy', { locale: ptBR })}
                 </p>
               </div>
               <div>
-                <p className="text-slate-400">Periodicidade</p>
-                <p className="text-white font-semibold">{obrigacao.periodicidade ?? '-'}</p>
+                <p className="text-slate-500">Periodicidade</p>
+                <p className="text-slate-900 font-semibold">{obrigacao.periodicidade ?? '-'}</p>
               </div>
               <div>
-                <p className="text-slate-400">Status</p>
-                <p className="text-white font-semibold">{obrigacao.status}</p>
+                <p className="text-slate-500">Status</p>
+                <p className="text-slate-900 font-semibold">{obrigacao.status}</p>
               </div>
               <div>
-                <p className="text-slate-400">Prioridade</p>
-                <p className="text-white font-semibold">{obrigacao.prioridade}</p>
+                <p className="text-slate-500">Prioridade</p>
+                <p className="text-slate-900 font-semibold">{obrigacao.prioridade}</p>
               </div>
               <div>
-                <p className="text-slate-400">Cliente</p>
-                <p className="text-white font-semibold">{obrigacao.cliente ?? '-'}</p>
+                <p className="text-slate-500">Cliente</p>
+                <p className="text-slate-900 font-semibold">{obrigacao.cliente ?? '-'}</p>
               </div>
               <div>
-                <p className="text-slate-400">Link do Documento</p>
+                <p className="text-slate-500">Link do Documento</p>
                 {obrigacao.linkDocumento ? (
                   <a
                     href={obrigacao.linkDocumento}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 hover:underline"
+                    className="text-green-600 hover:underline"
                   >
                     Abrir
                   </a>
                 ) : (
-                  <p className="text-white font-semibold">-</p>
+                  <p className="text-slate-900 font-semibold">-</p>
                 )}
               </div>
             </div>
@@ -274,7 +274,7 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
             {obrigacao.tags?.length > 0 && (
               <div className="flex gap-2 flex-wrap">
                 {obrigacao.tags.map((tag, idx) => (
-                  <span key={idx} className="bg-slate-600 text-slate-200 px-2 py-1 rounded text-xs">
+                  <span key={idx} className="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs">
                     {tag}
                   </span>
                 ))}
@@ -284,45 +284,45 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="bg-slate-700 rounded-lg p-6 border border-slate-600 space-y-5"
+            className="bg-white rounded-lg p-6 border border-green-100 shadow-sm space-y-5"
           >
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Título *</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Título *</label>
               <input
                 type="text"
                 value={form.titulo}
                 onChange={e => atualizarCampo('titulo', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               />
             </div>
 
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Descrição</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Descrição</label>
               <textarea
                 value={form.descricao}
                 onChange={e => atualizarCampo('descricao', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 rows={3}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Vencimento *</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Vencimento *</label>
                 <input
                   type="date"
                   value={form.vencimento}
                   onChange={e => atualizarCampo('vencimento', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Periodicidade</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Periodicidade</label>
                 <select
                   value={form.periodicidade}
                   onChange={e => atualizarCampo('periodicidade', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 >
                   <option value="unica">Única</option>
                   <option value="mensal">Mensal</option>
@@ -332,11 +332,11 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Status</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Status</label>
                 <select
                   value={form.status}
                   onChange={e => atualizarCampo('status', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 >
                   <option value="pendente">Pendente</option>
                   <option value="em_andamento">Em andamento</option>
@@ -345,11 +345,11 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
               </div>
 
               <div>
-                <label className="block text-slate-300 mb-2 font-semibold">Prioridade</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Prioridade</label>
                 <select
                   value={form.prioridade}
                   onChange={e => atualizarCampo('prioridade', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 >
                   <option value="baixa">Baixa</option>
                   <option value="normal">Normal</option>
@@ -359,32 +359,32 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
             </div>
 
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Cliente</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Cliente</label>
               <input
                 type="text"
                 value={form.cliente}
                 onChange={e => atualizarCampo('cliente', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               />
             </div>
 
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Tags (separadas por vírgula)</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Tags (separadas por vírgula)</label>
               <input
                 type="text"
                 value={form.tags}
                 onChange={e => atualizarCampo('tags', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               />
             </div>
 
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Link do Documento</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Link do Documento</label>
               <input
                 type="text"
                 value={form.linkDocumento}
                 onChange={e => atualizarCampo('linkDocumento', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               />
             </div>
 
@@ -392,14 +392,14 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
               <button
                 type="submit"
                 disabled={salvando}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition"
+                className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition"
               >
                 {salvando ? 'Salvando...' : 'Salvar Alterações'}
               </button>
               <button
                 type="button"
                 onClick={() => setEditando(false)}
-                className="bg-slate-600 hover:bg-slate-500 text-white px-6 py-3 rounded-lg font-semibold transition"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-3 rounded-lg font-semibold transition"
               >
                 Cancelar
               </button>

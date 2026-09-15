@@ -20,12 +20,21 @@ export async function GET(
 
   try {
     const resposta = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`, {
-      headers: { Accept: 'application/json' },
+      headers: {
+        Accept: 'application/json',
+        // Sem User-Agent a BrasilAPI responde 403 (bloqueio de requisições "headless")
+        'User-Agent': 'Mozilla/5.0 (compatible; MacContab/1.0)',
+      },
       cache: 'no-store',
     })
 
-    if (!resposta.ok) {
+    if (resposta.status === 404) {
       return NextResponse.json({ error: 'CNPJ não encontrado' }, { status: 404 })
+    }
+
+    if (!resposta.ok) {
+      console.error('BrasilAPI respondeu com erro:', resposta.status, await resposta.text().catch(() => ''))
+      return NextResponse.json({ error: 'Não foi possível consultar o CNPJ agora' }, { status: 502 })
     }
 
     const dados = await resposta.json()

@@ -23,6 +23,7 @@ model User {
   modelosObrigacao ModeloObrigacao[]
   honorarios Honorario[]
   pagamentosHonorario PagamentoHonorario[]
+  fechamentosMensais FechamentoMensal[]
 }
 
 // simples_nacional, lucro_presumido, lucro_real, mei, pessoa_fisica, produtor_rural
@@ -62,6 +63,7 @@ model Cliente {
   obrigacoes       Obrigacao[]
   honorarios       Honorario[]
   pagamentosHonorario PagamentoHonorario[]
+  fechamentosMensais FechamentoMensal[]
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -243,4 +245,30 @@ model PagamentoHonorario {
   @@index([status])
   @@index([clienteId])
   @@unique([honorarioId, competencia])
+}
+
+// Checklist padrão de fechamento mensal de um cliente para uma competência.
+// status: aberto, concluido, concluido_com_pendencia
+model FechamentoMensal {
+  id            String   @id @default(cuid())
+  competencia   String   // "YYYY-MM"
+  status        String   @default("aberto")
+  itens         Json     // [{ chave, label, critico, concluido }]
+  justificativa String?  // preenchida quando fechado com pendência crítica
+  autorizadoPor String?  // nome de quem autorizou a exceção
+  fechadoEm     DateTime?
+
+  clienteId     String
+  cliente       Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([clienteId, competencia])
+  @@index([userId])
+  @@index([competencia])
+  @@index([status])
 }

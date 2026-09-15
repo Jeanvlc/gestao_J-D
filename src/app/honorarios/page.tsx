@@ -162,12 +162,12 @@ export default function HonorariosPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Financeiro · Honorários</h1>
-            <p className="text-slate-400 mt-1">Controle de honorários mensais e vencimentos.</p>
+            <h1 className="text-3xl font-bold text-slate-900">Financeiro · Honorários</h1>
+            <p className="text-slate-500 mt-1">Controle de honorários mensais e vencimentos.</p>
           </div>
           <Link
             href="/honorarios/novo"
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             <Plus className="w-5 h-5" />
             Novo Contrato de Honorário
@@ -176,22 +176,22 @@ export default function HonorariosPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-8">
-          <StatCard icon={<Clock className="w-6 h-6" />} titulo="Total do Mês" valor={formatarMoeda(stats.total)} cor="bg-blue-500" />
+          <StatCard icon={<Clock className="w-6 h-6" />} titulo="Total do Mês" valor={formatarMoeda(stats.total)} cor="bg-green-500" />
           <StatCard icon={<CheckCircle className="w-6 h-6" />} titulo="Recebido" valor={formatarMoeda(stats.recebido)} cor="bg-green-500" />
           <StatCard icon={<Clock className="w-6 h-6" />} titulo="A Receber" valor={formatarMoeda(stats.pendente)} cor="bg-yellow-500" />
           <StatCard icon={<AlertCircle className="w-6 h-6" />} titulo="Atrasado" valor={formatarMoeda(stats.atrasado)} cor="bg-red-500" />
         </div>
 
         {/* Controle do mês */}
-        <div className="bg-slate-700 rounded-lg p-6 border border-slate-600 mb-8">
+        <div className="bg-white rounded-lg p-6 border border-green-200 mb-8">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-4">
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold text-sm">Competência</label>
+              <label className="block text-slate-700 mb-2 font-semibold text-sm">Competência</label>
               <input
                 type="month"
                 value={competencia}
                 onChange={e => setCompetencia(e.target.value)}
-                className="bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               />
             </div>
             <button
@@ -205,15 +205,15 @@ export default function HonorariosPage() {
           </div>
 
           {mensagem && (
-            <div className="bg-purple-900/40 border border-purple-700 text-purple-200 px-4 py-3 rounded-lg mb-4">
+            <div className="bg-purple-50 border border-purple-200 text-purple-700 px-4 py-3 rounded-lg mb-4">
               {mensagem}
             </div>
           )}
 
           {carregando ? (
-            <p className="text-slate-300">Carregando...</p>
+            <p className="text-slate-600">Carregando...</p>
           ) : pagamentos.length === 0 ? (
-            <p className="text-slate-300">Nenhuma cobrança gerada para essa competência ainda.</p>
+            <p className="text-slate-600">Nenhuma cobrança gerada para essa competência ainda.</p>
           ) : (
             <div className="space-y-2">
               {pagamentos.map(p => {
@@ -221,24 +221,24 @@ export default function HonorariosPage() {
                 return (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between bg-slate-800 rounded-lg p-4 border border-slate-600 flex-wrap gap-3"
+                    className="flex items-center justify-between bg-white rounded-lg p-4 border border-green-100 shadow-sm flex-wrap gap-3"
                   >
                     <div>
-                      <p className="text-white font-semibold">{p.cliente?.nome}</p>
-                      <p className="text-slate-400 text-sm">
+                      <p className="text-slate-900 font-semibold">{p.cliente?.nome}</p>
+                      <p className="text-slate-500 text-sm">
                         Vence em {format(new Date(p.vencimento), 'dd MMM yyyy', { locale: ptBR })}
                         {p.dataPagamento ? ` · Pago em ${format(new Date(p.dataPagamento), 'dd MMM yyyy', { locale: ptBR })}` : ''}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-white font-bold">{formatarMoeda(p.valor)}</span>
+                      <span className="text-slate-900 font-bold">{formatarMoeda(p.valor)}</span>
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${corStatus[status]}`}>
                         {status.toUpperCase()}
                       </span>
                       {status === 'pago' ? (
                         <button
                           onClick={() => desmarcarPago(p.id)}
-                          className="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded-lg text-sm font-semibold transition"
+                          className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-sm font-semibold transition"
                         >
                           Desfazer
                         </button>
@@ -260,10 +260,10 @@ export default function HonorariosPage() {
 
         {/* Contratos */}
         <div>
-          <h2 className="text-xl font-bold text-white mb-4">Contratos de Honorário</h2>
+          <h2 className="text-xl font-bold text-slate-900 mb-4">Contratos de Honorário</h2>
           {honorarios.length === 0 ? (
-            <div className="bg-slate-700 rounded-lg p-8 text-center">
-              <p className="text-slate-300 text-lg">Nenhum contrato de honorário cadastrado.</p>
+            <div className="bg-white rounded-lg p-8 text-center border border-green-100 shadow-sm">
+              <p className="text-slate-600 text-lg">Nenhum contrato de honorário cadastrado.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -271,17 +271,17 @@ export default function HonorariosPage() {
                 <Link
                   key={h.id}
                   href={`/honorarios/${h.id}`}
-                  className="flex items-center justify-between bg-slate-700 hover:bg-slate-600 rounded-lg p-5 transition border border-slate-600"
+                  className="flex items-center justify-between bg-white hover:bg-green-50 rounded-lg p-5 transition border border-green-100 shadow-sm"
                 >
                   <div>
-                    <p className="text-white font-semibold text-lg">{h.cliente?.nome}</p>
-                    <p className="text-slate-400 text-sm">
+                    <p className="text-slate-900 font-semibold text-lg">{h.cliente?.nome}</p>
+                    <p className="text-slate-500 text-sm">
                       {formatarMoeda(h.valor)} · Vence todo dia {h.diaVencimento}
                       {h.descricao ? ` · ${h.descricao}` : ''}
                     </p>
                   </div>
                   {!h.ativo && (
-                    <span className="bg-slate-600 text-slate-300 px-3 py-1 rounded-full text-xs font-bold">
+                    <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs font-bold">
                       INATIVO
                     </span>
                   )}
@@ -297,11 +297,11 @@ export default function HonorariosPage() {
 
 function StatCard({ icon, titulo, valor, cor }: any) {
   return (
-    <div className="bg-slate-700 rounded-lg p-6 border border-slate-600">
+    <div className="bg-white rounded-lg p-6 border border-green-200">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-slate-400 text-sm mb-2">{titulo}</p>
-          <p className="text-2xl font-bold text-white">{valor}</p>
+          <p className="text-slate-500 text-sm mb-2">{titulo}</p>
+          <p className="text-2xl font-bold text-slate-900">{valor}</p>
         </div>
         <div className={`${cor} p-4 rounded-lg text-white`}>
           {icon}

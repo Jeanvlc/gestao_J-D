@@ -153,12 +153,12 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
     return (
       <AppShell>
         <div className="max-w-2xl mx-auto">
-          <Link href="/modelos-obrigacao" className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-6">
+          <Link href="/modelos-obrigacao" className="flex items-center gap-2 text-slate-500 hover:text-green-700 transition mb-6">
             <ArrowLeft className="w-4 h-4" />
             Voltar aos Modelos
           </Link>
-          <div className="bg-slate-700 rounded-lg p-8 text-center">
-            <p className="text-slate-300 text-lg">Modelo não encontrado.</p>
+          <div className="bg-white rounded-lg p-8 text-center border border-green-100 shadow-sm">
+            <p className="text-slate-600 text-lg">Modelo não encontrado.</p>
           </div>
         </div>
       </AppShell>
@@ -169,7 +169,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
     <AppShell>
       <div className="max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <Link href="/modelos-obrigacao" className="flex items-center gap-2 text-slate-400 hover:text-white transition">
+          <Link href="/modelos-obrigacao" className="flex items-center gap-2 text-slate-500 hover:text-green-700 transition">
             <ArrowLeft className="w-4 h-4" />
             Voltar aos Modelos
           </Link>
@@ -182,53 +182,53 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           </button>
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-8">Editar Modelo</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-8">Editar Modelo</h1>
 
-        <form onSubmit={handleSubmit} className="bg-slate-700 rounded-lg p-6 border border-slate-600 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg p-6 border border-green-100 shadow-sm space-y-5">
           {erro && (
-            <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               {erro}
             </div>
           )}
 
           <div>
-            <label className="block text-slate-300 mb-2 font-semibold">Título *</label>
+            <label className="block text-slate-700 mb-2 font-semibold">Título *</label>
             <input
               type="text"
               value={form.titulo}
               onChange={e => atualizarCampo('titulo', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
             />
           </div>
 
           <div>
-            <label className="block text-slate-300 mb-2 font-semibold">Descrição</label>
+            <label className="block text-slate-700 mb-2 font-semibold">Descrição</label>
             <textarea
               value={form.descricao}
               onChange={e => atualizarCampo('descricao', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               rows={2}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Dia do Vencimento *</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Dia do Vencimento *</label>
               <input
                 type="number"
                 min={1}
                 max={31}
                 value={form.diaVencimento}
                 onChange={e => atualizarCampo('diaVencimento', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               />
             </div>
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Periodicidade</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Periodicidade</label>
               <select
                 value={form.periodicidade}
                 onChange={e => atualizarCampo('periodicidade', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               >
                 <option value="mensal">Mensal</option>
                 <option value="trimestral">Trimestral</option>
@@ -238,11 +238,11 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           </div>
 
           <div>
-            <label className="block text-slate-300 mb-2 font-semibold">Prioridade</label>
+            <label className="block text-slate-700 mb-2 font-semibold">Prioridade</label>
             <select
               value={form.prioridade}
               onChange={e => atualizarCampo('prioridade', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
             >
               <option value="baixa">Baixa</option>
               <option value="normal">Normal</option>
@@ -251,11 +251,11 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           </div>
 
           <div>
-            <label className="block text-slate-300 mb-2 font-semibold">Regime Tributário</label>
+            <label className="block text-slate-700 mb-2 font-semibold">Regime Tributário</label>
             <select
               value={form.regimeTributario}
               onChange={e => atualizarCampo('regimeTributario', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
             >
               <option value="">Todos os regimes</option>
               <option value="simples_nacional">Simples Nacional</option>
@@ -269,11 +269,11 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Estado</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Estado</label>
               <select
                 value={form.estado}
                 onChange={e => atualizarCampo('estado', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               >
                 <option value="">Todos os estados</option>
                 {ESTADOS.map(uf => (
@@ -282,28 +282,28 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
               </select>
             </div>
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Cidade</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Cidade</label>
               <input
                 type="text"
                 value={form.cidade}
                 onChange={e => atualizarCampo('cidade', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 placeholder="Deixe em branco para qualquer cidade"
               />
             </div>
           </div>
 
-          <div className="border border-slate-600 rounded-lg p-4 space-y-3">
-            <p className="text-slate-300 font-semibold text-sm">
+          <div className="border border-green-200 rounded-lg p-4 space-y-3">
+            <p className="text-slate-700 font-semibold text-sm">
               Critérios do perfil fiscal do cliente (motor de obrigações)
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-slate-400 mb-2 text-sm">Funcionários</label>
+                <label className="block text-slate-500 mb-2 text-sm">Funcionários</label>
                 <select
                   value={form.requerFuncionarios}
                   onChange={e => atualizarCampo('requerFuncionarios', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 >
                   <option value="">Indiferente</option>
                   <option value="sim">Exige que tenha</option>
@@ -311,11 +311,11 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
                 </select>
               </div>
               <div>
-                <label className="block text-slate-400 mb-2 text-sm">ICMS</label>
+                <label className="block text-slate-500 mb-2 text-sm">ICMS</label>
                 <select
                   value={form.requerIcms}
                   onChange={e => atualizarCampo('requerIcms', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 >
                   <option value="">Indiferente</option>
                   <option value="sim">Exige que tenha</option>
@@ -323,11 +323,11 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
                 </select>
               </div>
               <div>
-                <label className="block text-slate-400 mb-2 text-sm">Retenções</label>
+                <label className="block text-slate-500 mb-2 text-sm">Retenções</label>
                 <select
                   value={form.requerRetencoes}
                   onChange={e => atualizarCampo('requerRetencoes', e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-white border border-green-300 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 >
                   <option value="">Indiferente</option>
                   <option value="sim">Exige que tenha</option>
@@ -338,16 +338,16 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           </div>
 
           <div>
-            <label className="block text-slate-300 mb-2 font-semibold">Tags (separadas por vírgula)</label>
+            <label className="block text-slate-700 mb-2 font-semibold">Tags (separadas por vírgula)</label>
             <input
               type="text"
               value={form.tags}
               onChange={e => atualizarCampo('tags', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
             />
           </div>
 
-          <label className="flex items-center gap-2 text-slate-300">
+          <label className="flex items-center gap-2 text-slate-600">
             <input
               type="checkbox"
               checked={form.ativo}
@@ -360,7 +360,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           <button
             type="submit"
             disabled={salvando}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition"
+            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             {salvando ? 'Salvando...' : 'Salvar Alterações'}
           </button>

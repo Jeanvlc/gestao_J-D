@@ -60,7 +60,8 @@ export default function CadastroPage() {
 
   return (
     <div style={{ maxWidth: 360, margin: '80px auto', fontFamily: 'sans-serif' }}>
-      <h1>Criar conta</h1>
+      <h1 style={{ color: '#15803d' }}>MacContab</h1>
+      <p style={{ color: '#64748b', marginBottom: 24 }}>Criar conta</p>
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: 12 }}>
           <label>Nome</label>
@@ -94,7 +95,11 @@ export default function CadastroPage() {
           />
         </div>
         {erro && <p style={{ color: 'red' }}>{erro}</p>}
-        <button type="submit" disabled={carregando} style={{ padding: 8, width: '100%' }}>
+        <button
+          type="submit"
+          disabled={carregando}
+          style={{ padding: 8, width: '100%', background: '#16a34a', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}
+        >
           {carregando ? 'Criando...' : 'Criar conta'}
         </button>
       </form>

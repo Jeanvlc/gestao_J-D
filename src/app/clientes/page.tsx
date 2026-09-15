@@ -41,11 +41,11 @@ export default function ClientesPage() {
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Clientes</h1>
+            <h1 className="text-3xl font-bold text-slate-900">Clientes</h1>
           </div>
           <Link
             href="/clientes/novo"
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             <Plus className="w-5 h-5" />
             Novo Cliente
@@ -53,10 +53,10 @@ export default function ClientesPage() {
         </div>
 
         {carregando ? (
-          <div className="text-slate-300">Carregando...</div>
+          <div className="text-slate-600">Carregando...</div>
         ) : clientes.length === 0 ? (
-          <div className="bg-slate-700 rounded-lg p-8 text-center">
-            <p className="text-slate-300 text-lg">Nenhum cliente cadastrado.</p>
+          <div className="bg-white rounded-lg p-8 text-center border border-green-100 shadow-sm">
+            <p className="text-slate-600 text-lg">Nenhum cliente cadastrado.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -64,17 +64,17 @@ export default function ClientesPage() {
               <Link
                 key={cliente.id}
                 href={`/clientes/${cliente.id}`}
-                className="flex items-center justify-between bg-slate-700 hover:bg-slate-600 rounded-lg p-5 transition border border-slate-600"
+                className="flex items-center justify-between bg-white hover:bg-green-50 rounded-lg p-5 transition border border-green-100 shadow-sm"
               >
                 <div>
-                  <p className="text-white font-semibold text-lg">{cliente.nome}</p>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-slate-900 font-semibold text-lg">{cliente.nome}</p>
+                  <p className="text-slate-500 text-sm">
                     {REGIME_LABELS[cliente.regimeTributario] ?? cliente.regimeTributario}
                     {cliente.cidade ? ` · ${cliente.cidade}${cliente.estado ? '/' + cliente.estado : ''}` : ''}
                   </p>
                 </div>
                 {!cliente.ativo && (
-                  <span className="bg-slate-600 text-slate-300 px-3 py-1 rounded-full text-xs font-bold">
+                  <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs font-bold">
                     INATIVO
                   </span>
                 )}

@@ -7,6 +7,7 @@ import {
   Users,
   FileCog,
   Wallet,
+  ClipboardCheck,
   Plus,
   LogOut,
 } from 'lucide-react'
@@ -17,6 +18,7 @@ const ITENS = [
   { href: '/clientes', label: 'Clientes', icon: Users },
   { href: '/modelos-obrigacao', label: 'Modelos de Obrigação', icon: FileCog },
   { href: '/honorarios', label: 'Financeiro', icon: Wallet },
+  { href: '/fechamento', label: 'Fechamento Mensal', icon: ClipboardCheck },
 ]
 
 export default function Sidebar() {
@@ -31,10 +33,10 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-64 shrink-0 bg-slate-900 border-r border-slate-700 min-h-screen flex flex-col">
-      <div className="px-6 py-6 border-b border-slate-700">
-        <p className="text-white font-bold text-lg">MacContab</p>
-        <p className="text-slate-500 text-xs">Gestão Contábil</p>
+    <aside className="w-64 shrink-0 bg-white border-r border-green-100 min-h-screen flex flex-col">
+      <div className="px-6 py-6 border-b border-green-100">
+        <p className="text-green-700 font-bold text-lg">MacContab</p>
+        <p className="text-slate-400 text-xs">Gestão Contábil</p>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
@@ -47,8 +49,8 @@ export default function Sidebar() {
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition ${
                 ativo
-                  ? 'bg-blue-600 text-white'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-green-600 text-white'
+                  : 'text-slate-600 hover:bg-green-50 hover:text-green-700'
               }`}
             >
               <Icon className="w-5 h-5" />
@@ -59,17 +61,17 @@ export default function Sidebar() {
 
         <Link
           href="/obrigacoes/novo"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white mt-4 border border-dashed border-slate-700"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-slate-600 hover:bg-green-50 hover:text-green-700 mt-4 border border-dashed border-green-200"
         >
           <Plus className="w-5 h-5" />
           Nova Obrigação
         </Link>
       </nav>
 
-      <div className="px-3 py-4 border-t border-slate-700">
+      <div className="px-3 py-4 border-t border-green-100">
         <button
           onClick={sair}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-slate-300 hover:bg-slate-800 hover:text-white"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition text-slate-600 hover:bg-green-50 hover:text-green-700"
         >
           <LogOut className="w-5 h-5" />
           Sair

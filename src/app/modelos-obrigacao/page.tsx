@@ -43,14 +43,14 @@ export default function ModelosObrigacaoPage() {
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Modelos de Obrigação</h1>
-            <p className="text-slate-400 mt-1">
+            <h1 className="text-3xl font-bold text-slate-900">Modelos de Obrigação</h1>
+            <p className="text-slate-500 mt-1">
               Regras que geram obrigações mensais automaticamente por regime tributário e/ou cidade.
             </p>
           </div>
           <Link
             href="/modelos-obrigacao/novo"
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             <Plus className="w-5 h-5" />
             Novo Modelo
@@ -58,10 +58,10 @@ export default function ModelosObrigacaoPage() {
         </div>
 
         {carregando ? (
-          <div className="text-slate-300">Carregando...</div>
+          <div className="text-slate-600">Carregando...</div>
         ) : modelos.length === 0 ? (
-          <div className="bg-slate-700 rounded-lg p-8 text-center">
-            <p className="text-slate-300 text-lg">Nenhum modelo cadastrado.</p>
+          <div className="bg-white rounded-lg p-8 text-center border border-green-100 shadow-sm">
+            <p className="text-slate-600 text-lg">Nenhum modelo cadastrado.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -69,11 +69,11 @@ export default function ModelosObrigacaoPage() {
               <Link
                 key={modelo.id}
                 href={`/modelos-obrigacao/${modelo.id}`}
-                className="flex items-center justify-between bg-slate-700 hover:bg-slate-600 rounded-lg p-5 transition border border-slate-600"
+                className="flex items-center justify-between bg-white hover:bg-green-50 rounded-lg p-5 transition border border-green-100 shadow-sm"
               >
                 <div>
-                  <p className="text-white font-semibold text-lg">{modelo.titulo}</p>
-                  <p className="text-slate-400 text-sm">
+                  <p className="text-slate-900 font-semibold text-lg">{modelo.titulo}</p>
+                  <p className="text-slate-500 text-sm">
                     Vence todo dia {modelo.diaVencimento} · {modelo.periodicidade}
                     {' · '}
                     {modelo.regimeTributario ? REGIME_LABELS[modelo.regimeTributario] ?? modelo.regimeTributario : 'Todos os regimes'}
@@ -82,7 +82,7 @@ export default function ModelosObrigacaoPage() {
                   </p>
                 </div>
                 {!modelo.ativo && (
-                  <span className="bg-slate-600 text-slate-300 px-3 py-1 rounded-full text-xs font-bold">
+                  <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-xs font-bold">
                     INATIVO
                   </span>
                 )}

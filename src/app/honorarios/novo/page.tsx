@@ -77,26 +77,26 @@ export default function NovoHonorario() {
   return (
     <AppShell>
       <div className="max-w-2xl mx-auto">
-        <Link href="/honorarios" className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-6">
+        <Link href="/honorarios" className="flex items-center gap-2 text-slate-500 hover:text-green-700 transition mb-6">
           <ArrowLeft className="w-4 h-4" />
           Voltar ao Financeiro
         </Link>
 
-        <h1 className="text-3xl font-bold text-white mb-8">Novo Contrato de Honorário</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-8">Novo Contrato de Honorário</h1>
 
-        <form onSubmit={handleSubmit} className="bg-slate-700 rounded-lg p-6 border border-slate-600 space-y-5">
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg p-6 border border-green-100 shadow-sm space-y-5">
           {erro && (
-            <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               {erro}
             </div>
           )}
 
           <div>
-            <label className="block text-slate-300 mb-2 font-semibold">Cliente *</label>
+            <label className="block text-slate-700 mb-2 font-semibold">Cliente *</label>
             <select
               value={form.clienteId}
               onChange={e => atualizarCampo('clienteId', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
             >
               <option value="">Selecione um cliente</option>
               {clientes.map(c => (
@@ -107,49 +107,49 @@ export default function NovoHonorario() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Valor Mensal (R$) *</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Valor Mensal (R$) *</label>
               <input
                 type="number"
                 min={0}
                 step="0.01"
                 value={form.valor}
                 onChange={e => atualizarCampo('valor', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 placeholder="0,00"
               />
             </div>
             <div>
-              <label className="block text-slate-300 mb-2 font-semibold">Dia do Vencimento *</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Dia do Vencimento *</label>
               <input
                 type="number"
                 min={1}
                 max={31}
                 value={form.diaVencimento}
                 onChange={e => atualizarCampo('diaVencimento', e.target.value)}
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-300 mb-2 font-semibold">Descrição</label>
+            <label className="block text-slate-700 mb-2 font-semibold">Descrição</label>
             <input
               type="text"
               value={form.descricao}
               onChange={e => atualizarCampo('descricao', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               placeholder="Ex: Honorário contábil mensal"
             />
           </div>
 
-          <p className="text-slate-400 text-sm">
+          <p className="text-slate-500 text-sm">
             Após criar o contrato, use &quot;Gerar Cobranças do Mês&quot; na tela Financeiro para lançar a cobrança da competência atual.
           </p>
 
           <button
             type="submit"
             disabled={salvando}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition"
+            className="w-full bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition"
           >
             {salvando ? 'Salvando...' : 'Salvar Contrato'}
           </button>
