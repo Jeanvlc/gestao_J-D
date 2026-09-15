@@ -3,7 +3,6 @@ export const fetchCache = 'force-no-store'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsuarioAtual } from '@/lib/auth'
-import { montarDadosCliente } from '@/lib/clienteData'
 
 async function conectarBanco() {
   try {
@@ -12,38 +11,6 @@ async function conectarBanco() {
   } catch (error) {
     console.error('Erro ao conectar:', error)
     return null
-  }
-}
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const usuario = await getUsuarioAtual()
-  const userId = usuario?.id
-
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  try {
-    const prisma = await conectarBanco()
-    if (!prisma) {
-      return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
-    }
-
-    const cliente = await prisma.cliente.findFirst({
-      where: { id: params.id, userId },
-    })
-
-    if (!cliente) {
-      return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
-    }
-
-    return NextResponse.json(cliente)
-  } catch (error) {
-    console.error('Erro ao buscar cliente:', error)
-    return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
 
@@ -65,29 +32,26 @@ export async function PUT(
       return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    const cliente = await prisma.cliente.findFirst({
-      where: { id: params.id, userId },
-    })
-
-    if (!cliente) {
+    const pagamento = await prisma.pagamentoHonorario.findFirst({ where: { id: params.id, userId } })
+    if (!pagamento) {
       return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
     }
 
-    const atualizado = await prisma.cliente.update({
+    const status = data.status ?? pagamento.status
+    const atualizado = await prisma.pagamentoHonorario.update({
       where: { id: params.id },
-      data: montarDadosCliente(data),
+      data: {
+        status,
+        observacoes: data.observacoes ?? pagamento.observacoes,
+        dataPagamento: status === 'pago'
+          ? (data.dataPagamento ? new Date(data.dataPagamento) : new Date())
+          : null,
+      },
     })
-
-    try {
-      const { recalcularObrigacoesCliente } = await import('@/lib/obrigacoesEngine')
-      await recalcularObrigacoesCliente(prisma, userId, atualizado.id)
-    } catch (err) {
-      console.error('Erro ao recalcular obrigações do cliente:', err)
-    }
 
     return NextResponse.json(atualizado)
   } catch (error) {
-    console.error('Erro ao atualizar cliente:', error)
+    console.error('Erro ao atualizar pagamento:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
@@ -109,19 +73,16 @@ export async function DELETE(
       return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    const cliente = await prisma.cliente.findFirst({
-      where: { id: params.id, userId },
-    })
-
-    if (!cliente) {
+    const pagamento = await prisma.pagamentoHonorario.findFirst({ where: { id: params.id, userId } })
+    if (!pagamento) {
       return NextResponse.json({ error: 'Não encontrado' }, { status: 404 })
     }
 
-    await prisma.cliente.delete({ where: { id: params.id } })
+    await prisma.pagamentoHonorario.delete({ where: { id: params.id } })
 
     return NextResponse.json({ sucesso: true })
   } catch (error) {
-    console.error('Erro ao deletar cliente:', error)
+    console.error('Erro ao deletar pagamento:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }

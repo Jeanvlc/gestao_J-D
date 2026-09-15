@@ -5,6 +5,26 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Trash2 } from 'lucide-react'
+import AppShell from '@/components/AppShell'
+
+const ESTADOS = [
+  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB',
+  'PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
+]
+
+type Tristate = '' | 'sim' | 'nao'
+
+function tristateParaBooleano(valor: Tristate): boolean | null {
+  if (valor === 'sim') return true
+  if (valor === 'nao') return false
+  return null
+}
+
+function booleanoParaTristate(valor: boolean | null | undefined): Tristate {
+  if (valor === true) return 'sim'
+  if (valor === false) return 'nao'
+  return ''
+}
 
 export default function DetalheModelo({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -20,7 +40,11 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
     periodicidade: 'mensal',
     prioridade: 'normal',
     regimeTributario: '',
+    estado: '',
     cidade: '',
+    requerFuncionarios: '' as Tristate,
+    requerIcms: '' as Tristate,
+    requerRetencoes: '' as Tristate,
     ativo: true,
   })
 
@@ -43,7 +67,11 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           periodicidade: dados.periodicidade ?? 'mensal',
           prioridade: dados.prioridade ?? 'normal',
           regimeTributario: dados.regimeTributario ?? '',
+          estado: dados.estado ?? '',
           cidade: dados.cidade ?? '',
+          requerFuncionarios: booleanoParaTristate(dados.requerFuncionarios),
+          requerIcms: booleanoParaTristate(dados.requerIcms),
+          requerRetencoes: booleanoParaTristate(dados.requerRetencoes),
           ativo: dados.ativo ?? true,
         })
       })
@@ -80,7 +108,11 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           periodicidade: form.periodicidade,
           prioridade: form.prioridade,
           regimeTributario: form.regimeTributario || null,
+          estado: form.estado || null,
           cidade: form.cidade || null,
+          requerFuncionarios: tristateParaBooleano(form.requerFuncionarios),
+          requerIcms: tristateParaBooleano(form.requerIcms),
+          requerRetencoes: tristateParaBooleano(form.requerRetencoes),
           ativo: form.ativo,
         }),
       })
@@ -119,7 +151,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
 
   if (!encontrado) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+      <AppShell>
         <div className="max-w-2xl mx-auto">
           <Link href="/modelos-obrigacao" className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-6">
             <ArrowLeft className="w-4 h-4" />
@@ -129,12 +161,12 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
             <p className="text-slate-300 text-lg">Modelo não encontrado.</p>
           </div>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+    <AppShell>
       <div className="max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <Link href="/modelos-obrigacao" className="flex items-center gap-2 text-slate-400 hover:text-white transition">
@@ -235,15 +267,74 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
             </select>
           </div>
 
-          <div>
-            <label className="block text-slate-300 mb-2 font-semibold">Cidade</label>
-            <input
-              type="text"
-              value={form.cidade}
-              onChange={e => atualizarCampo('cidade', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-              placeholder="Deixe em branco para valer em qualquer cidade"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-slate-300 mb-2 font-semibold">Estado</label>
+              <select
+                value={form.estado}
+                onChange={e => atualizarCampo('estado', e.target.value)}
+                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Todos os estados</option>
+                {ESTADOS.map(uf => (
+                  <option key={uf} value={uf}>{uf}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-slate-300 mb-2 font-semibold">Cidade</label>
+              <input
+                type="text"
+                value={form.cidade}
+                onChange={e => atualizarCampo('cidade', e.target.value)}
+                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                placeholder="Deixe em branco para qualquer cidade"
+              />
+            </div>
+          </div>
+
+          <div className="border border-slate-600 rounded-lg p-4 space-y-3">
+            <p className="text-slate-300 font-semibold text-sm">
+              Critérios do perfil fiscal do cliente (motor de obrigações)
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-slate-400 mb-2 text-sm">Funcionários</label>
+                <select
+                  value={form.requerFuncionarios}
+                  onChange={e => atualizarCampo('requerFuncionarios', e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">Indiferente</option>
+                  <option value="sim">Exige que tenha</option>
+                  <option value="nao">Exige que não tenha</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-2 text-sm">ICMS</label>
+                <select
+                  value={form.requerIcms}
+                  onChange={e => atualizarCampo('requerIcms', e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">Indiferente</option>
+                  <option value="sim">Exige que tenha</option>
+                  <option value="nao">Exige que não tenha</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-2 text-sm">Retenções</label>
+                <select
+                  value={form.requerRetencoes}
+                  onChange={e => atualizarCampo('requerRetencoes', e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">Indiferente</option>
+                  <option value="sim">Exige que tenha</option>
+                  <option value="nao">Exige que não tenha</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -275,6 +366,6 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           </button>
         </form>
       </div>
-    </div>
+    </AppShell>
   )
 }

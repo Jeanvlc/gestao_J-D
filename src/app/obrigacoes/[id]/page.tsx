@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ArrowLeft, CheckCircle, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import AppShell from '@/components/AppShell'
 
 interface Obrigacao {
   id: string
@@ -157,7 +158,7 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
 
   if (!obrigacao) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+      <AppShell>
         <div className="max-w-2xl mx-auto">
           <Link href="/dashboard" className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-6">
             <ArrowLeft className="w-4 h-4" />
@@ -167,12 +168,12 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
             <p className="text-slate-300 text-lg">Obrigação não encontrada.</p>
           </div>
         </div>
-      </div>
+      </AppShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+    <AppShell>
       <div className="max-w-2xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <Link href="/dashboard" className="flex items-center gap-2 text-slate-400 hover:text-white transition">
@@ -406,6 +407,6 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
           </form>
         )}
       </div>
-    </div>
+    </AppShell>
   )
 }

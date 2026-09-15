@@ -3,7 +3,6 @@ export const fetchCache = 'force-no-store'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsuarioAtual } from '@/lib/auth'
-import { montarDadosCliente } from '@/lib/clienteData'
 
 async function conectarBanco() {
   try {
@@ -29,14 +28,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([], { status: 200 })
     }
 
-    const clientes = await prisma.cliente.findMany({
+    const honorarios = await prisma.honorario.findMany({
       where: { userId },
-      orderBy: { nome: 'asc' },
+      include: { cliente: { select: { id: true, nome: true } } },
+      orderBy: { createdAt: 'desc' },
     })
 
-    return NextResponse.json(clientes)
+    return NextResponse.json(honorarios)
   } catch (error) {
-    console.error('Erro ao buscar clientes:', error)
+    console.error('Erro ao buscar honorários:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }
@@ -50,8 +50,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  if (!data.nome || !data.regimeTributario) {
-    return NextResponse.json({ error: 'Nome e regime tributário são obrigatórios' }, { status: 400 })
+  const valor = Number(data.valor)
+  const diaVencimento = Number(data.diaVencimento)
+
+  if (!data.clienteId || !valor || valor <= 0 || !diaVencimento || diaVencimento < 1 || diaVencimento > 31) {
+    return NextResponse.json({ error: 'Cliente, valor e dia de vencimento válidos são obrigatórios' }, { status: 400 })
   }
 
   try {
@@ -60,23 +63,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    const cliente = await prisma.cliente.create({
+    const cliente = await prisma.cliente.findFirst({ where: { id: data.clienteId, userId } })
+    if (!cliente) {
+      return NextResponse.json({ error: 'Cliente não encontrado' }, { status: 404 })
+    }
+
+    const honorario = await prisma.honorario.create({
       data: {
-        ...montarDadosCliente(data),
+        clienteId: data.clienteId,
+        descricao: data.descricao || null,
+        valor,
+        diaVencimento,
+        ativo: data.ativo ?? true,
         userId,
       },
     })
 
-    try {
-      const { recalcularObrigacoesCliente } = await import('@/lib/obrigacoesEngine')
-      await recalcularObrigacoesCliente(prisma, userId, cliente.id)
-    } catch (err) {
-      console.error('Erro ao recalcular obrigações do cliente:', err)
-    }
-
-    return NextResponse.json(cliente, { status: 201 })
+    return NextResponse.json(honorario, { status: 201 })
   } catch (error) {
-    console.error('Erro ao criar cliente:', error)
+    console.error('Erro ao criar honorário:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })
   }
 }

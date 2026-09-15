@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import AppShell from '@/components/AppShell'
 
 interface Modelo {
   id: string
@@ -11,6 +12,7 @@ interface Modelo {
   diaVencimento: number
   periodicidade: string
   regimeTributario: string | null
+  estado: string | null
   cidade: string | null
   ativo: boolean
 }
@@ -37,14 +39,10 @@ export default function ModelosObrigacaoPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+    <AppShell>
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <Link href="/dashboard" className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-3">
-              <ArrowLeft className="w-4 h-4" />
-              Voltar ao Dashboard
-            </Link>
             <h1 className="text-3xl font-bold text-white">Modelos de Obrigação</h1>
             <p className="text-slate-400 mt-1">
               Regras que geram obrigações mensais automaticamente por regime tributário e/ou cidade.
@@ -79,6 +77,7 @@ export default function ModelosObrigacaoPage() {
                     Vence todo dia {modelo.diaVencimento} · {modelo.periodicidade}
                     {' · '}
                     {modelo.regimeTributario ? REGIME_LABELS[modelo.regimeTributario] ?? modelo.regimeTributario : 'Todos os regimes'}
+                    {modelo.estado ? ` · ${modelo.estado}` : ''}
                     {modelo.cidade ? ` · ${modelo.cidade}` : ' · Qualquer cidade'}
                   </p>
                 </div>
@@ -92,6 +91,6 @@ export default function ModelosObrigacaoPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppShell>
   )
 }

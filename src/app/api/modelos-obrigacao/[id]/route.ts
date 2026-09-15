@@ -82,10 +82,23 @@ export async function PUT(
         periodicidade: data.periodicidade || 'mensal',
         prioridade: data.prioridade || 'normal',
         regimeTributario: data.regimeTributario || null,
+        estado: data.estado || null,
         cidade: data.cidade || null,
+        requerFuncionarios: data.requerFuncionarios ?? null,
+        requerIcms: data.requerIcms ?? null,
+        requerRetencoes: data.requerRetencoes ?? null,
         ativo: data.ativo ?? true,
       },
     })
+
+    try {
+      const { recalcularObrigacoesCliente } = await import('@/lib/obrigacoesEngine')
+      const { prisma: db } = await import('@/lib/db')
+      const clientes = await db.cliente.findMany({ where: { userId, ativo: true }, select: { id: true } })
+      await Promise.all(clientes.map((c: { id: string }) => recalcularObrigacoesCliente(db, userId, c.id)))
+    } catch (err) {
+      console.error('Erro ao recalcular obrigações após editar modelo:', err)
+    }
 
     return NextResponse.json(atualizado)
   } catch (error) {

@@ -8,16 +8,12 @@ import {
   CheckCircle,
   Clock,
   Plus,
-  Users,
-  FileCog,
   Sparkles,
-  LogOut,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { format, isBefore, isToday, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { createClient } from '@/lib/supabase/client'
+import AppShell from '@/components/AppShell'
 
 interface Obrigacao {
   id: string
@@ -36,7 +32,6 @@ interface Stats {
 }
 
 export default function Dashboard() {
-  const router = useRouter()
   const [obrigacoes, setObrigacoes] = useState<Obrigacao[]>([])
   const [stats, setStats] = useState<Stats>({
     atrasadas: 0,
@@ -157,7 +152,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+    <AppShell>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
@@ -166,20 +161,6 @@ export default function Dashboard() {
             <p className="text-slate-400">Gestão de Obrigações - MacContab</p>
           </div>
           <div className="flex gap-3 flex-wrap">
-            <Link
-              href="/clientes"
-              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white px-4 py-3 rounded-lg font-semibold transition"
-            >
-              <Users className="w-5 h-5" />
-              Clientes
-            </Link>
-            <Link
-              href="/modelos-obrigacao"
-              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white px-4 py-3 rounded-lg font-semibold transition"
-            >
-              <FileCog className="w-5 h-5" />
-              Modelos
-            </Link>
             <button
               onClick={gerarObrigacoesDoMes}
               disabled={gerando}
@@ -195,18 +176,6 @@ export default function Dashboard() {
               <Plus className="w-5 h-5" />
               Nova Obrigação
             </Link>
-            <button
-              onClick={async () => {
-                const supabase = createClient()
-                await supabase.auth.signOut()
-                router.push('/login')
-                router.refresh()
-              }}
-              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white px-4 py-3 rounded-lg font-semibold transition"
-            >
-              <LogOut className="w-5 h-5" />
-              Sair
-            </button>
           </div>
         </div>
 
@@ -308,7 +277,7 @@ export default function Dashboard() {
           )}
         </div>
       </div>
-    </div>
+    </AppShell>
   )
 }
 

@@ -3,7 +3,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import AppShell from '@/components/AppShell'
 
 interface Cliente {
   id: string
@@ -36,14 +37,10 @@ export default function ClientesPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+    <AppShell>
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <Link href="/dashboard" className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-3">
-              <ArrowLeft className="w-4 h-4" />
-              Voltar ao Dashboard
-            </Link>
             <h1 className="text-3xl font-bold text-white">Clientes</h1>
           </div>
           <Link
@@ -86,6 +83,6 @@ export default function ClientesPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppShell>
   )
 }

@@ -3,6 +3,7 @@ export const fetchCache = 'force-no-store'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsuarioAtual } from '@/lib/auth'
+import { competenciaAtual, dataVencimento, modeloAplicavel } from '@/lib/obrigacoesEngine'
 
 async function conectarBanco() {
   try {
@@ -14,23 +15,9 @@ async function conectarBanco() {
   }
 }
 
-function competenciaAtual() {
-  const agora = new Date()
-  const mes = String(agora.getMonth() + 1).padStart(2, '0')
-  return `${agora.getFullYear()}-${mes}`
-}
-
-function dataVencimento(competencia: string, diaVencimento: number) {
-  const [anoStr, mesStr] = competencia.split('-')
-  const ano = Number(anoStr)
-  const mes = Number(mesStr) // 1-12
-  const ultimoDiaDoMes = new Date(ano, mes, 0).getDate()
-  const dia = Math.min(diaVencimento, ultimoDiaDoMes)
-  return new Date(ano, mes - 1, dia)
-}
-
 // Gera 1 Obrigacao por Cliente ativo x ModeloObrigacao ativo aplicável
-// (regime/cidade do modelo batendo com o cliente), para a competência informada.
+// (regime/estado/cidade/funcionários/ICMS/retenções do modelo batendo com o cliente),
+// para a competência informada.
 export async function POST(request: NextRequest) {
   const usuario = await getUsuarioAtual()
   const userId = usuario?.id
@@ -76,10 +63,7 @@ export async function POST(request: NextRequest) {
 
     for (const cliente of clientes) {
       for (const modelo of modelos) {
-        const regimeBate = !modelo.regimeTributario || modelo.regimeTributario === cliente.regimeTributario
-        const cidadeBate = !modelo.cidade || modelo.cidade === cliente.cidade
-
-        if (!regimeBate || !cidadeBate) continue
+        if (!modeloAplicavel(modelo, cliente)) continue
 
         paraCriar.push({
           titulo: modelo.titulo,

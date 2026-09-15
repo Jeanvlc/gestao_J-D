@@ -21,22 +21,47 @@ model User {
   tarefas    Tarefa[]
   clientes   Cliente[]
   modelosObrigacao ModeloObrigacao[]
+  honorarios Honorario[]
+  pagamentosHonorario PagamentoHonorario[]
 }
 
 // simples_nacional, lucro_presumido, lucro_real, mei, pessoa_fisica, produtor_rural
 model Cliente {
   id               String   @id @default(cuid())
   nome             String
+  razaoSocial      String?
+  nomeFantasia     String?
   cnpjCpf          String?
+  tipoPessoa       String   @default("juridica") // juridica, fisica
   regimeTributario String
+  inscricaoEstadual  String?
+  inscricaoMunicipal String?
+  email            String?
+  telefone         String?
+  responsavel      String?
+  cep              String?
+  logradouro       String?
+  numero           String?
+  complemento      String?
+  bairro           String?
   cidade           String?
   estado           String?
+  situacaoCadastral  String?
+  atividadePrincipal String?
+  dataAbertura     DateTime?
+  // Usados pelo motor de obrigações para decidir quais modelos se aplicam ao cliente
+  possuiFuncionarios Boolean @default(false)
+  possuiIcms         Boolean @default(false)
+  possuiRetencoes    Boolean @default(false)
+  observacoes      String?
   ativo            Boolean  @default(true)
 
   userId           String
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   obrigacoes       Obrigacao[]
+  honorarios       Honorario[]
+  pagamentosHonorario PagamentoHonorario[]
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -56,7 +81,12 @@ model ModeloObrigacao {
   periodicidade    String   @default("mensal") // mensal, trimestral, anual
   prioridade       String   @default("normal")
   regimeTributario String?  // null = vale para qualquer regime
+  estado           String?  // null = vale para qualquer estado
   cidade           String?  // null = vale para qualquer cidade
+  // Critérios do motor de obrigações: null = indiferente, true/false = exige que o cliente tenha/não tenha
+  requerFuncionarios Boolean?
+  requerIcms         Boolean?
+  requerRetencoes    Boolean?
   ativo            Boolean  @default(true)
 
   userId           String
@@ -152,13 +182,65 @@ model Tarefa {
   status        String   @default("pendente") // pendente, em_progresso, concluida
   prioridade    String   @default("normal")
   categoria     String?  // "Urgente", "Importante", "Rotina", etc
-  
+
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   @@index([userId])
   @@index([status])
+}
+
+// Contrato de honorário mensal de um cliente (valor recorrente + dia de vencimento)
+model Honorario {
+  id            String   @id @default(cuid())
+  descricao     String?
+  valor         Float
+  diaVencimento Int
+  ativo         Boolean  @default(true)
+
+  clienteId     String
+  cliente       Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pagamentos    PagamentoHonorario[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([clienteId])
+}
+
+// Uma cobrança mensal gerada a partir de um Honorario, para controle financeiro (vencimento/pagamento)
+model PagamentoHonorario {
+  id            String   @id @default(cuid())
+  competencia   String   // "YYYY-MM"
+  valor         Float
+  vencimento    DateTime
+  status        String   @default("pendente") // pendente, pago, atrasado
+  dataPagamento DateTime?
+  observacoes   String?
+
+  honorarioId   String
+  honorario     Honorario @relation(fields: [honorarioId], references: [id], onDelete: Cascade)
+
+  clienteId     String
+  cliente       Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([vencimento])
+  @@index([status])
+  @@index([clienteId])
+  @@unique([honorarioId, competencia])
 }

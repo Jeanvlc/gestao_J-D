@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import AppShell from '@/components/AppShell'
 
 export default function NovaObrigacao() {
   const router = useRouter()
@@ -72,7 +73,7 @@ export default function NovaObrigacao() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+    <AppShell>
       <div className="max-w-2xl mx-auto">
         <Link
           href="/dashboard"
@@ -225,6 +226,6 @@ export default function NovaObrigacao() {
           </button>
         </form>
       </div>
-    </div>
+    </AppShell>
   )
 }

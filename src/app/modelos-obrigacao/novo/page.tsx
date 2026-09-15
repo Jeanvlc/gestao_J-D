@@ -5,6 +5,22 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import AppShell from '@/components/AppShell'
+
+const ESTADOS = [
+  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB',
+  'PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
+]
+
+// '' = indiferente, 'sim' = exige verdadeiro, 'nao' = exige falso
+const CRITERIOS_TRISTATE = ['', 'sim', 'nao'] as const
+type Tristate = typeof CRITERIOS_TRISTATE[number]
+
+function tristateParaBooleano(valor: Tristate): boolean | null {
+  if (valor === 'sim') return true
+  if (valor === 'nao') return false
+  return null
+}
 
 export default function NovoModelo() {
   const router = useRouter()
@@ -18,7 +34,11 @@ export default function NovoModelo() {
     periodicidade: 'mensal',
     prioridade: 'normal',
     regimeTributario: '',
+    estado: '',
     cidade: '',
+    requerFuncionarios: '' as Tristate,
+    requerIcms: '' as Tristate,
+    requerRetencoes: '' as Tristate,
   })
 
   const atualizarCampo = (campo: string, valor: string) => {
@@ -50,7 +70,11 @@ export default function NovoModelo() {
           periodicidade: form.periodicidade,
           prioridade: form.prioridade,
           regimeTributario: form.regimeTributario || null,
+          estado: form.estado || null,
           cidade: form.cidade || null,
+          requerFuncionarios: tristateParaBooleano(form.requerFuncionarios),
+          requerIcms: tristateParaBooleano(form.requerIcms),
+          requerRetencoes: tristateParaBooleano(form.requerRetencoes),
         }),
       })
 
@@ -66,7 +90,7 @@ export default function NovoModelo() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
+    <AppShell>
       <div className="max-w-2xl mx-auto">
         <Link href="/modelos-obrigacao" className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-6">
           <ArrowLeft className="w-4 h-4" />
@@ -159,15 +183,74 @@ export default function NovoModelo() {
             </select>
           </div>
 
-          <div>
-            <label className="block text-slate-300 mb-2 font-semibold">Cidade</label>
-            <input
-              type="text"
-              value={form.cidade}
-              onChange={e => atualizarCampo('cidade', e.target.value)}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
-              placeholder="Deixe em branco para valer em qualquer cidade (ex: Alvará varia por cidade)"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-slate-300 mb-2 font-semibold">Estado</label>
+              <select
+                value={form.estado}
+                onChange={e => atualizarCampo('estado', e.target.value)}
+                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="">Todos os estados</option>
+                {ESTADOS.map(uf => (
+                  <option key={uf} value={uf}>{uf}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-slate-300 mb-2 font-semibold">Cidade</label>
+              <input
+                type="text"
+                value={form.cidade}
+                onChange={e => atualizarCampo('cidade', e.target.value)}
+                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+                placeholder="Deixe em branco para qualquer cidade"
+              />
+            </div>
+          </div>
+
+          <div className="border border-slate-600 rounded-lg p-4 space-y-3">
+            <p className="text-slate-300 font-semibold text-sm">
+              Critérios do perfil fiscal do cliente (motor de obrigações)
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-slate-400 mb-2 text-sm">Funcionários</label>
+                <select
+                  value={form.requerFuncionarios}
+                  onChange={e => atualizarCampo('requerFuncionarios', e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">Indiferente</option>
+                  <option value="sim">Exige que tenha</option>
+                  <option value="nao">Exige que não tenha</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-2 text-sm">ICMS</label>
+                <select
+                  value={form.requerIcms}
+                  onChange={e => atualizarCampo('requerIcms', e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">Indiferente</option>
+                  <option value="sim">Exige que tenha</option>
+                  <option value="nao">Exige que não tenha</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-400 mb-2 text-sm">Retenções</label>
+                <select
+                  value={form.requerRetencoes}
+                  onChange={e => atualizarCampo('requerRetencoes', e.target.value)}
+                  className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">Indiferente</option>
+                  <option value="sim">Exige que tenha</option>
+                  <option value="nao">Exige que não tenha</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div>
@@ -190,6 +273,6 @@ export default function NovoModelo() {
           </button>
         </form>
       </div>
-    </div>
+    </AppShell>
   )
 }
