@@ -14,6 +14,7 @@ interface Obrigacao {
   titulo: string
   descricao: string | null
   vencimento: string
+  dataEnvioCliente: string | null
   periodicidade: string | null
   status: string
   prioridade: string
@@ -38,6 +39,7 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
     titulo: '',
     descricao: '',
     vencimento: '',
+    dataEnvioCliente: '',
     periodicidade: 'unica',
     status: 'pendente',
     prioridade: 'normal',
@@ -64,6 +66,7 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
         titulo: dados.titulo ?? '',
         descricao: dados.descricao ?? '',
         vencimento: paraInputDate(dados.vencimento),
+        dataEnvioCliente: dados.dataEnvioCliente ? paraInputDate(dados.dataEnvioCliente) : '',
         periodicidade: dados.periodicidade ?? 'unica',
         status: dados.status ?? 'pendente',
         prioridade: dados.prioridade ?? 'normal',
@@ -95,6 +98,7 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
           titulo: form.titulo,
           descricao: form.descricao || null,
           vencimento: form.vencimento,
+          dataEnvioCliente: form.dataEnvioCliente || null,
           periodicidade: form.periodicidade,
           status: form.status,
           prioridade: form.prioridade,
@@ -233,11 +237,19 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-slate-500">Vencimento</p>
+                <p className="text-slate-500">Vencimento (prazo legal)</p>
                 <p className="text-slate-900 font-semibold">
                   {format(new Date(obrigacao.vencimento), 'dd MMM yyyy', { locale: ptBR })}
                 </p>
               </div>
+              {obrigacao.dataEnvioCliente && (
+                <div>
+                  <p className="text-slate-500">Avisar/cobrar o cliente em</p>
+                  <p className="text-slate-900 font-semibold">
+                    {format(new Date(obrigacao.dataEnvioCliente), 'dd MMM yyyy', { locale: ptBR })}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-slate-500">Periodicidade</p>
                 <p className="text-slate-900 font-semibold">{obrigacao.periodicidade ?? '-'}</p>
@@ -308,11 +320,21 @@ export default function DetalheObrigacao({ params }: { params: { id: string } })
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-slate-700 mb-2 font-semibold">Vencimento *</label>
+                <label className="block text-slate-700 mb-2 font-semibold">Vencimento (prazo legal) *</label>
                 <input
                   type="date"
                   value={form.vencimento}
                   onChange={e => atualizarCampo('vencimento', e.target.value)}
+                  className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 mb-2 font-semibold">Avisar/cobrar o cliente em</label>
+                <input
+                  type="date"
+                  value={form.dataEnvioCliente}
+                  onChange={e => atualizarCampo('dataEnvioCliente', e.target.value)}
                   className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
                 />
               </div>

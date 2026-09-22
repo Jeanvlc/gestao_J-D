@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Trash2, CheckCircle } from 'lucide-react'
 import AppShell from '@/components/AppShell'
+import { nomeCliente } from '@/lib/clientes'
 
 interface ItemChecklistTarefa {
   chave: string
@@ -31,7 +32,7 @@ interface Tarefa {
   etapaChave: string | null
   grupoSocietarioId: string | null
   clienteId: string | null
-  clienteRef: { id: string; nome: string } | null
+  clienteRef: { id: string; nome: string; razaoSocial: string | null } | null
 }
 
 function paraInputDate(iso: string | null) {
@@ -285,14 +286,14 @@ export default function DetalheTarefa({ params }: { params: { id: string } }) {
                 </span>
               )}
               {tarefa.clienteRef && (
-                <span className="text-slate-500 text-sm">· Cliente: {tarefa.clienteRef.nome}</span>
+                <span className="text-slate-500 text-sm">· Cliente: {nomeCliente(tarefa.clienteRef)}</span>
               )}
             </div>
           )}
           <h1 className="text-2xl font-bold text-slate-900">{tarefa.titulo}</h1>
           {tarefa.descricao && <p className="text-slate-600">{tarefa.descricao}</p>}
           {tarefa.tipo !== 'societaria' && tarefa.clienteRef && (
-            <p className="text-slate-500 text-sm">Cliente: {tarefa.clienteRef.nome}</p>
+            <p className="text-slate-500 text-sm">Cliente: {nomeCliente(tarefa.clienteRef)}</p>
           )}
 
           <div className="grid grid-cols-2 gap-4 text-sm">

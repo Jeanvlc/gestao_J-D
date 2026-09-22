@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import AppShell from '@/components/AppShell'
+import { nomeCliente } from '@/lib/clientes'
 
 interface ClienteResumo {
   id: string
   nome: string
+  razaoSocial: string | null
 }
 
 export default function NovaTarefa() {
@@ -40,7 +42,7 @@ export default function NovaTarefa() {
   }
 
   const clientesFiltrados = clientes.filter(c =>
-    c.nome.toLowerCase().includes(buscaCliente.toLowerCase())
+    nomeCliente(c).toLowerCase().includes(buscaCliente.toLowerCase())
   )
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -150,7 +152,7 @@ export default function NovaTarefa() {
             >
               <option value="">Nenhum</option>
               {clientesFiltrados.map(c => (
-                <option key={c.id} value={c.id}>{c.nome}</option>
+                <option key={c.id} value={c.id}>{nomeCliente(c)}</option>
               ))}
             </select>
             {buscaCliente && clientesFiltrados.length === 0 && (

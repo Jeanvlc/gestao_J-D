@@ -4,6 +4,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ChevronLeft, ChevronRight, List } from 'lucide-react'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
 import AppShell from '@/components/AppShell'
 
 interface Obrigacao {
@@ -11,6 +13,14 @@ interface Obrigacao {
   titulo: string
   vencimento: string
   status: string
+  cliente: string | null
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  pendente: 'Pendente',
+  em_andamento: 'Em andamento',
+  concluida: 'Concluída',
+  atrasada: 'Atrasada',
 }
 
 const STATUS_COR: Record<string, string> = {
@@ -35,6 +45,7 @@ export default function CalendarioObrigacoes() {
     const hoje = new Date()
     return new Date(hoje.getFullYear(), hoje.getMonth(), 1)
   })
+  const [diaSelecionado, setDiaSelecionado] = useState<number | null>(null)
 
   useEffect(() => {
     fetch('/api/obrigacoes')
@@ -66,6 +77,7 @@ export default function CalendarioObrigacoes() {
 
   const mudarMes = (delta: number) => {
     setMesAtual(prev => new Date(prev.getFullYear(), prev.getMonth() + delta, 1))
+    setDiaSelecionado(null)
   }
 
   const hoje = new Date()
@@ -124,22 +136,33 @@ export default function CalendarioObrigacoes() {
               {celulas.map((dia, idx) => (
                 <div
                   key={idx}
-                  className={`min-h-[110px] border-b border-r border-green-50 p-2 ${dia === null ? 'bg-slate-50' : ''}`}
+                  onClick={() => dia !== null && setDiaSelecionado(dia)}
+                  className={`min-h-[110px] border-b border-r border-green-50 p-2 ${dia === null ? 'bg-slate-50' : 'cursor-pointer hover:bg-green-50/50'} ${
+                    dia !== null && dia === diaSelecionado ? 'bg-green-50 ring-1 ring-inset ring-green-300' : ''
+                  }`}
                 >
                   {dia !== null && (
                     <>
-                      <p className={`text-sm font-semibold mb-1 ${ehHoje(dia) ? 'text-green-700' : 'text-slate-700'}`}>
-                        {dia}
-                      </p>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className={`text-sm font-semibold ${ehHoje(dia) ? 'text-green-700' : 'text-slate-700'}`}>
+                          {dia}
+                        </p>
+                        {(obrigacoesPorDia.get(dia)?.length ?? 0) > 0 && (
+                          <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 rounded-full">
+                            {obrigacoesPorDia.get(dia)?.length}
+                          </span>
+                        )}
+                      </div>
                       <div className="space-y-1">
                         {(obrigacoesPorDia.get(dia) ?? []).slice(0, 3).map(o => (
                           <Link
                             key={o.id}
                             href={`/obrigacoes/${o.id}`}
+                            onClick={e => e.stopPropagation()}
                             className={`block truncate text-xs px-1.5 py-0.5 rounded border ${corDoDia(o)}`}
-                            title={o.titulo}
+                            title={`${o.titulo}${o.cliente ? ' · ' + o.cliente : ''}`}
                           >
-                            {o.titulo}
+                            {o.cliente ? `${o.cliente} · ${o.titulo}` : o.titulo}
                           </Link>
                         ))}
                         {(obrigacoesPorDia.get(dia)?.length ?? 0) > 3 && (
@@ -153,6 +176,44 @@ export default function CalendarioObrigacoes() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        <div className="flex gap-4 flex-wrap mt-4 text-xs text-slate-500">
+          {Object.entries(STATUS_LABEL).map(([status, label]) => (
+            <span key={status} className="flex items-center gap-1.5">
+              <span className={`w-3 h-3 rounded border ${STATUS_COR[status]}`} />
+              {label}
+            </span>
+          ))}
+        </div>
+
+        {diaSelecionado !== null && (
+          <div className="bg-white rounded-lg border border-green-100 shadow-sm p-5 mt-4">
+            <p className="text-slate-900 font-bold mb-3">
+              {format(new Date(mesAtual.getFullYear(), mesAtual.getMonth(), diaSelecionado), "dd 'de' MMMM", { locale: ptBR })}
+            </p>
+            {(obrigacoesPorDia.get(diaSelecionado) ?? []).length === 0 ? (
+              <p className="text-slate-500 text-sm">Nenhuma obrigação neste dia.</p>
+            ) : (
+              <div className="space-y-2">
+                {(obrigacoesPorDia.get(diaSelecionado) ?? []).map(o => (
+                  <Link
+                    key={o.id}
+                    href={`/obrigacoes/${o.id}`}
+                    className="flex items-center justify-between bg-slate-50 hover:bg-green-50 rounded-lg px-4 py-2 transition"
+                  >
+                    <div>
+                      <p className="text-slate-900 font-semibold text-sm">{o.titulo}</p>
+                      {o.cliente && <p className="text-slate-500 text-xs">{o.cliente}</p>}
+                    </div>
+                    <span className={`px-2 py-1 rounded text-xs font-bold border ${corDoDia(o)}`}>
+                      {STATUS_LABEL[o.status] ?? o.status}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

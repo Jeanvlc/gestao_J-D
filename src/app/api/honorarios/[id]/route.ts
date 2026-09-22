@@ -34,7 +34,7 @@ export async function GET(
     const honorario = await prisma.honorario.findFirst({
       where: { id: params.id, userId },
       include: {
-        cliente: { select: { id: true, nome: true } },
+        cliente: { select: { id: true, nome: true, razaoSocial: true } },
         pagamentos: { orderBy: { competencia: 'desc' } },
       },
     })

@@ -26,14 +26,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let competencia = competenciaAtual()
+  let competencias = [competenciaAtual()]
   try {
     const body = await request.json().catch(() => ({}))
-    if (body?.competencia && /^\d{4}-\d{2}$/.test(body.competencia)) {
-      competencia = body.competencia
+    if (Array.isArray(body?.competencias) && body.competencias.length > 0) {
+      competencias = body.competencias.filter((c: unknown) => typeof c === 'string' && /^\d{4}-\d{2}$/.test(c))
+    } else if (body?.competencia && /^\d{4}-\d{2}$/.test(body.competencia)) {
+      competencias = [body.competencia]
     }
   } catch {
     // sem body, usa competência atual
+  }
+
+  if (competencias.length === 0) {
+    return NextResponse.json({ error: 'Nenhuma competência válida informada' }, { status: 400 })
   }
 
   try {
@@ -51,6 +57,7 @@ export async function POST(request: NextRequest) {
       titulo: string
       descricao: string | null
       vencimento: Date
+      dataEnvioCliente: Date | null
       periodicidade: string
       prioridade: string
       cliente: string
@@ -61,37 +68,42 @@ export async function POST(request: NextRequest) {
       userId: string
     }[] = []
 
-    for (const cliente of clientes) {
-      if (competenciaAntesDoClienteDesde(competencia, cliente.clienteDesde)) continue
-      for (const modelo of modelos) {
-        if (!modeloAplicavel(modelo, cliente)) continue
+    for (const competencia of competencias) {
+      for (const cliente of clientes) {
+        if (competenciaAntesDoClienteDesde(competencia, cliente.clienteDesde)) continue
+        for (const modelo of modelos) {
+          if (!modeloAplicavel(modelo, cliente)) continue
 
-        paraCriar.push({
-          titulo: modelo.titulo,
-          descricao: modelo.descricao,
-          vencimento: dataVencimento(competencia, modelo.diaVencimento),
-          periodicidade: modelo.periodicidade,
-          prioridade: modelo.prioridade,
-          cliente: cliente.nome,
-          tags: modelo.tags,
-          clienteId: cliente.id,
-          modeloId: modelo.id,
-          competencia,
-          userId,
-        })
+          paraCriar.push({
+            titulo: modelo.titulo,
+            descricao: modelo.descricao,
+            vencimento: dataVencimento(competencia, modelo.diaVencimento),
+            dataEnvioCliente: modelo.diaEnvioCliente ? dataVencimento(competencia, modelo.diaEnvioCliente) : null,
+            periodicidade: modelo.periodicidade,
+            prioridade: modelo.prioridade,
+            cliente: cliente.razaoSocial || cliente.nome,
+            tags: modelo.tags,
+            clienteId: cliente.id,
+            modeloId: modelo.id,
+            competencia,
+            userId,
+          })
+        }
       }
     }
 
     if (paraCriar.length === 0) {
-      return NextResponse.json({ criadas: 0, competencia })
+      return NextResponse.json({ criadas: 0, competencias })
     }
 
+    // O índice único [modeloId, clienteId, competencia] garante que nenhuma
+    // obrigação seja duplicada, mesmo gerando a mesma competência mais de uma vez.
     const resultado = await prisma.obrigacao.createMany({
       data: paraCriar,
       skipDuplicates: true,
     })
 
-    return NextResponse.json({ criadas: resultado.count, competencia })
+    return NextResponse.json({ criadas: resultado.count, competencias })
   } catch (error) {
     console.error('Erro ao gerar obrigações:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })

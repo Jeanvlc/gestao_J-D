@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
         ...(grupoSocietarioId ? { grupoSocietarioId } : {}),
       },
       orderBy: [{ status: 'asc' }, { dataVencimento: 'asc' }],
-      include: { clienteRef: { select: { id: true, nome: true } } },
+      include: { clienteRef: { select: { id: true, nome: true, razaoSocial: true } } },
     })
 
     return NextResponse.json(tarefas)

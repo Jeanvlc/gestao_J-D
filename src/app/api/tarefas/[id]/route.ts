@@ -33,7 +33,7 @@ export async function GET(
 
     const tarefa = await prisma.tarefa.findFirst({
       where: { id: params.id, userId },
-      include: { clienteRef: { select: { id: true, nome: true } } },
+      include: { clienteRef: { select: { id: true, nome: true, razaoSocial: true } } },
     })
     if (!tarefa) {
       return NextResponse.json({ error: 'Não encontrada' }, { status: 404 })
@@ -83,7 +83,7 @@ export async function PUT(
         checklist: data.checklist !== undefined ? data.checklist : (tarefa.checklist as any),
         clienteId: data.clienteId !== undefined ? data.clienteId : tarefa.clienteId,
       },
-      include: { clienteRef: { select: { id: true, nome: true } } },
+      include: { clienteRef: { select: { id: true, nome: true, razaoSocial: true } } },
     })
 
     return NextResponse.json(atualizada)

@@ -5,10 +5,12 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import AppShell from '@/components/AppShell'
+import { nomeCliente } from '@/lib/clientes'
 
 interface Cliente {
   id: string
   nome: string
+  razaoSocial: string | null
   regimeTributario: string
   cidade: string | null
   estado: string | null
@@ -67,7 +69,7 @@ export default function ClientesPage() {
                 className="flex items-center justify-between bg-white hover:bg-green-50 rounded-lg p-5 transition border border-green-100 shadow-sm"
               >
                 <div>
-                  <p className="text-slate-900 font-semibold text-lg">{cliente.nome}</p>
+                  <p className="text-slate-900 font-semibold text-lg">{nomeCliente(cliente)}</p>
                   <p className="text-slate-500 text-sm">
                     {REGIME_LABELS[cliente.regimeTributario] ?? cliente.regimeTributario}
                     {cliente.cidade ? ` · ${cliente.cidade}${cliente.estado ? '/' + cliente.estado : ''}` : ''}

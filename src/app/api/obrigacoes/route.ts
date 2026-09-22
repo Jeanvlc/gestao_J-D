@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
       data: {
         ...data,
         userId,
-        vencimento: new Date(data.vencimento)
+        vencimento: new Date(data.vencimento),
+        dataEnvioCliente: data.dataEnvioCliente ? new Date(data.dataEnvioCliente) : null,
       }
     })
 

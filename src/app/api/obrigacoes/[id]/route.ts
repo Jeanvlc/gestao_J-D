@@ -77,6 +77,7 @@ export async function PUT(
       data: {
         ...data,
         ...(data.vencimento && { vencimento: new Date(data.vencimento) }),
+        ...(data.dataEnvioCliente && { dataEnvioCliente: new Date(data.dataEnvioCliente) }),
         ...(data.dataAtendimento && { dataAtendimento: new Date(data.dataAtendimento) }),
       },
     })
@@ -100,6 +101,9 @@ export async function PUT(
                 titulo: proximoModelo.titulo,
                 descricao: proximoModelo.descricao,
                 vencimento: dataVencimento(competencia, proximoModelo.diaVencimento),
+                dataEnvioCliente: proximoModelo.diaEnvioCliente
+                  ? dataVencimento(competencia, proximoModelo.diaEnvioCliente)
+                  : null,
                 periodicidade: proximoModelo.periodicidade,
                 prioridade: proximoModelo.prioridade,
                 cliente: atualizada.cliente,

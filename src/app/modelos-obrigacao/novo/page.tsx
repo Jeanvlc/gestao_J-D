@@ -38,6 +38,7 @@ export default function NovoModelo() {
     descricao: '',
     tags: '',
     diaVencimento: '10',
+    diaEnvioCliente: '',
     periodicidade: 'mensal',
     prioridade: 'normal',
     regimesTributarios: [] as string[],
@@ -78,6 +79,11 @@ export default function NovoModelo() {
       setErro('Preencha o título e um dia de vencimento válido (1-31).')
       return
     }
+    const diaEnvio = form.diaEnvioCliente ? Number(form.diaEnvioCliente) : null
+    if (diaEnvio !== null && (diaEnvio < 1 || diaEnvio > 31)) {
+      setErro('O dia de envio ao cliente deve ser entre 1 e 31.')
+      return
+    }
 
     setSalvando(true)
     try {
@@ -91,6 +97,7 @@ export default function NovoModelo() {
           descricao: form.descricao || null,
           tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
           diaVencimento: dia,
+          diaEnvioCliente: diaEnvio,
           periodicidade: form.periodicidade,
           prioridade: form.prioridade,
           regimesTributarios: form.regimesTributarios,
@@ -154,7 +161,7 @@ export default function NovoModelo() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-slate-700 mb-2 font-semibold">Dia do Vencimento *</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Dia do Vencimento (prazo legal) *</label>
               <input
                 type="number"
                 min={1}
@@ -176,6 +183,22 @@ export default function NovoModelo() {
                 <option value="anual">Anual</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-slate-700 mb-2 font-semibold">Dia para avisar/cobrar o cliente (opcional)</label>
+            <input
+              type="number"
+              min={1}
+              max={31}
+              value={form.diaEnvioCliente}
+              onChange={e => atualizarCampo('diaEnvioCliente', e.target.value)}
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
+              placeholder="Deixe em branco para usar o mesmo dia do vencimento"
+            />
+            <p className="text-slate-500 text-sm mt-1">
+              Ex: PIS/COFINS vence dia 25, mas você quer avisar o cliente dia 20.
+            </p>
           </div>
 
           <div>

@@ -4,6 +4,7 @@ export const fetchCache = 'force-no-store'
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsuarioAtual } from '@/lib/auth'
 import { competenciaAtual } from '@/lib/obrigacoesEngine'
+import { nomeCliente } from '@/lib/clientes'
 
 async function conectarBanco() {
   try {
@@ -44,7 +45,7 @@ export async function GET(request: NextRequest) {
       }),
       prisma.tarefa.findMany({
         where: { userId, status: { not: 'concluida' } },
-        include: { clienteRef: { select: { id: true, nome: true } } },
+        include: { clienteRef: { select: { id: true, nome: true, razaoSocial: true } } },
         orderBy: { dataVencimento: 'asc' },
       }),
     ])
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
     for (const t of tarefas) {
       if (t.tipo === 'societaria' && t.grupoSocietarioId && !gruposSocietarios.has(t.grupoSocietarioId)) {
         gruposSocietarios.set(t.grupoSocietarioId, {
-          clienteNome: t.clienteRef?.nome ?? null,
+          clienteNome: t.clienteRef ? nomeCliente(t.clienteRef) : null,
           etapaAtual: t.titulo,
           tarefaId: t.id,
         })

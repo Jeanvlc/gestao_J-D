@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
         userId,
         ...(competenciaInicio ? { competencia: { gte: competenciaInicio } } : {}),
       },
-      include: { cliente: { select: { id: true, nome: true } } },
+      include: { cliente: { select: { id: true, nome: true, razaoSocial: true } } },
       orderBy: { data: 'asc' },
     })
 

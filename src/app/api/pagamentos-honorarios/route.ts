@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         ...(competencia ? { competencia } : {}),
         ...(status ? { status } : {}),
       },
-      include: { cliente: { select: { id: true, nome: true } } },
+      include: { cliente: { select: { id: true, nome: true, razaoSocial: true } } },
       orderBy: { vencimento: 'asc' },
     })
 

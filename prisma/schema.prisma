@@ -88,7 +88,8 @@ model ModeloObrigacao {
   titulo           String
   descricao        String?
   tags             String[]
-  diaVencimento    Int      // dia do mês em que a obrigação vence
+  diaVencimento    Int      // dia do mês em que a obrigação vence de fato (prazo legal)
+  diaEnvioCliente  Int?     // dia do mês para enviar/cobrar o cliente, se diferente do vencimento legal
   periodicidade    String   @default("mensal") // mensal, trimestral, anual
   prioridade       String   @default("normal")
   regimesTributarios String[] @default([]) // vazio = vale para qualquer regime
@@ -122,6 +123,7 @@ model Obrigacao {
   titulo        String
   descricao     String?
   vencimento    DateTime
+  dataEnvioCliente DateTime? // data para avisar/cobrar o cliente, se diferente do vencimento legal
   periodicidade String?  // "mensal", "trimestral", "anual", "unica"
   status        String   @default("pendente") // pendente, em_andamento, concluida, atrasada
   prioridade    String   @default("normal") // baixa, normal, alta

@@ -16,6 +16,7 @@ export default function NovaObrigacao() {
     titulo: '',
     descricao: '',
     vencimento: '',
+    dataEnvioCliente: '',
     periodicidade: 'unica',
     status: 'pendente',
     prioridade: 'normal',
@@ -48,6 +49,7 @@ export default function NovaObrigacao() {
           titulo: form.titulo,
           descricao: form.descricao || null,
           vencimento: form.vencimento,
+          dataEnvioCliente: form.dataEnvioCliente || null,
           periodicidade: form.periodicidade,
           status: form.status,
           prioridade: form.prioridade,
@@ -129,6 +131,18 @@ export default function NovaObrigacao() {
                 type="date"
                 value={form.vencimento}
                 onChange={e => atualizarCampo('vencimento', e.target.value)}
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-slate-700 mb-2 font-semibold">
+                Avisar/cobrar o cliente em
+              </label>
+              <input
+                type="date"
+                value={form.dataEnvioCliente}
+                onChange={e => atualizarCampo('dataEnvioCliente', e.target.value)}
                 className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               />
             </div>

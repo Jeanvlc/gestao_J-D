@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     const honorarios = await prisma.honorario.findMany({
       where: { userId },
-      include: { cliente: { select: { id: true, nome: true } } },
+      include: { cliente: { select: { id: true, nome: true, razaoSocial: true } } },
       orderBy: { createdAt: 'desc' },
     })
 

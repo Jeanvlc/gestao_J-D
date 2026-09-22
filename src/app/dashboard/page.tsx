@@ -48,6 +48,7 @@ interface Obrigacao {
   status: string
   prioridade: string
   tags: string[]
+  cliente: string | null
 }
 
 interface Stats {
@@ -69,8 +70,6 @@ export default function Dashboard() {
   })
   const [carregando, setCarregando] = useState(true)
   const [filtro, setFiltro] = useState<string>('todos')
-  const [gerando, setGerando] = useState(false)
-  const [mensagemGeracao, setMensagemGeracao] = useState('')
   const [extra, setExtra] = useState<DashboardExtra | null>(null)
 
   useEffect(() => {
@@ -92,29 +91,6 @@ export default function Dashboard() {
       console.error('Erro ao carregar obrigações:', error)
     } finally {
       setCarregando(false)
-    }
-  }
-
-  const gerarObrigacoesDoMes = async () => {
-    setGerando(true)
-    setMensagemGeracao('')
-    try {
-      const response = await fetch('/api/obrigacoes/gerar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const resultado = await response.json()
-      if (!response.ok) throw new Error(resultado.error || 'Erro ao gerar')
-
-      setMensagemGeracao(`${resultado.criadas} obrigação(ões) gerada(s) para ${resultado.competencia}.`)
-      carregarObrigacoes()
-    } catch (error) {
-      console.error('Erro ao gerar obrigações:', error)
-      setMensagemGeracao('Não foi possível gerar as obrigações do mês.')
-    } finally {
-      setGerando(false)
     }
   }
 
@@ -178,10 +154,11 @@ export default function Dashboard() {
 
   const getCorStatus = (status: string) => {
     switch (status) {
-      case 'concluida': return 'text-green-600'
-      case 'pendente': return 'text-red-600'
-      case 'em_andamento': return 'text-green-600'
-      default: return 'text-gray-600'
+      case 'concluida': return 'bg-green-100 text-green-800'
+      case 'pendente': return 'bg-red-100 text-red-800'
+      case 'em_andamento': return 'bg-blue-100 text-blue-800'
+      case 'atrasada': return 'bg-red-100 text-red-800'
+      default: return 'bg-gray-100 text-gray-800'
     }
   }
 
@@ -210,14 +187,13 @@ export default function Dashboard() {
               <CalendarDays className="w-5 h-5" />
               Calendário
             </Link>
-            <button
-              onClick={gerarObrigacoesDoMes}
-              disabled={gerando}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-4 py-3 rounded-lg font-semibold transition"
+            <Link
+              href="/obrigacoes/gerar"
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-3 rounded-lg font-semibold transition"
             >
               <Sparkles className="w-5 h-5" />
-              {gerando ? 'Gerando...' : 'Gerar Obrigações do Mês'}
-            </button>
+              Gerar Obrigações
+            </Link>
             <Link
               href="/obrigacoes/novo"
               className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition"
@@ -227,14 +203,6 @@ export default function Dashboard() {
             </Link>
           </div>
         </div>
-
-        {mensagemGeracao ? (
-          <div className="bg-purple-50 border border-purple-200 text-purple-700 px-4 py-3 rounded-lg mb-8">
-            {mensagemGeracao}
-          </div>
-        ) : (
-          <div className="mb-4" />
-        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
@@ -389,12 +357,15 @@ export default function Dashboard() {
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-1 flex-wrap">
                       <h3 className="text-xl font-semibold text-slate-900">{obrig.titulo}</h3>
-                      <span className={`px-2 py-1 rounded text-xs font-bold ${getCorStatus(obrig.status)}`}>
+                      <span className={`px-2 py-1 rounded text-xs font-bold shrink-0 ${getCorStatus(obrig.status)}`}>
                         {obrig.status.toUpperCase()}
                       </span>
                     </div>
+                    {obrig.cliente && (
+                      <p className="text-slate-600 font-medium mb-2">{obrig.cliente}</p>
+                    )}
                     <div className="flex gap-2 flex-wrap mb-3">
                       {obrig.tags?.map((tag, idx) => (
                         <span key={idx} className="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs">
@@ -403,7 +374,7 @@ export default function Dashboard() {
                       ))}
                     </div>
                     <div className="flex items-center gap-2 text-slate-500">
-                      <Calendar className="w-4 h-4" />
+                      <Calendar className="w-4 h-4 shrink-0" />
                       <span>
                         {format(new Date(obrig.vencimento), 'dd MMM yyyy', { locale: ptBR })}
                       </span>

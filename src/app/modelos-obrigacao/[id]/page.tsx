@@ -44,6 +44,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
     descricao: '',
     tags: '',
     diaVencimento: '10',
+    diaEnvioCliente: '',
     periodicidade: 'mensal',
     prioridade: 'normal',
     regimesTributarios: [] as string[],
@@ -79,6 +80,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           descricao: dados.descricao ?? '',
           tags: (dados.tags ?? []).join(', '),
           diaVencimento: String(dados.diaVencimento ?? 10),
+          diaEnvioCliente: dados.diaEnvioCliente ? String(dados.diaEnvioCliente) : '',
           periodicidade: dados.periodicidade ?? 'mensal',
           prioridade: dados.prioridade ?? 'normal',
           regimesTributarios: Array.isArray(dados.regimesTributarios) ? dados.regimesTributarios : [],
@@ -117,6 +119,11 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
       setErro('Preencha o título e um dia de vencimento válido (1-31).')
       return
     }
+    const diaEnvio = form.diaEnvioCliente ? Number(form.diaEnvioCliente) : null
+    if (diaEnvio !== null && (diaEnvio < 1 || diaEnvio > 31)) {
+      setErro('O dia de envio ao cliente deve ser entre 1 e 31.')
+      return
+    }
 
     setSalvando(true)
     try {
@@ -130,6 +137,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           descricao: form.descricao || null,
           tags: form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
           diaVencimento: dia,
+          diaEnvioCliente: diaEnvio,
           periodicidade: form.periodicidade,
           prioridade: form.prioridade,
           regimesTributarios: form.regimesTributarios,
@@ -239,7 +247,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-slate-700 mb-2 font-semibold">Dia do Vencimento *</label>
+              <label className="block text-slate-700 mb-2 font-semibold">Dia do Vencimento (prazo legal) *</label>
               <input
                 type="number"
                 min={1}
@@ -261,6 +269,22 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
                 <option value="anual">Anual</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-slate-700 mb-2 font-semibold">Dia para avisar/cobrar o cliente (opcional)</label>
+            <input
+              type="number"
+              min={1}
+              max={31}
+              value={form.diaEnvioCliente}
+              onChange={e => atualizarCampo('diaEnvioCliente', e.target.value)}
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
+              placeholder="Deixe em branco para usar o mesmo dia do vencimento"
+            />
+            <p className="text-slate-500 text-sm mt-1">
+              Ex: PIS/COFINS vence dia 25, mas você quer avisar o cliente dia 20.
+            </p>
           </div>
 
           <div>

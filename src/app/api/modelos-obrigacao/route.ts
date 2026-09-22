@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
         descricao: data.descricao || null,
         tags: data.tags || [],
         diaVencimento: Number(data.diaVencimento),
+        diaEnvioCliente: data.diaEnvioCliente ? Number(data.diaEnvioCliente) : null,
         periodicidade: data.periodicidade || 'mensal',
         prioridade: data.prioridade || 'normal',
         regimesTributarios: Array.isArray(data.regimesTributarios) ? data.regimesTributarios : [],
