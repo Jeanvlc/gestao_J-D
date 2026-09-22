@@ -21,6 +21,7 @@ export function montarDadosCliente(data: any) {
     situacaoCadastral: data.situacaoCadastral || null,
     atividadePrincipal: data.atividadePrincipal || null,
     dataAbertura: data.dataAbertura ? new Date(data.dataAbertura) : null,
+    clienteDesde: data.clienteDesde ? new Date(data.clienteDesde) : null,
     possuiFuncionarios: data.possuiFuncionarios ?? false,
     possuiIcms: data.possuiIcms ?? false,
     possuiRetencoes: data.possuiRetencoes ?? false,

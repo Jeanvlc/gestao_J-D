@@ -88,6 +88,7 @@ export async function PUT(
         requerIcms: data.requerIcms ?? null,
         requerRetencoes: data.requerRetencoes ?? null,
         ativo: data.ativo ?? true,
+        proximoModeloId: data.proximoModeloId || null,
       },
     })
 

@@ -13,6 +13,11 @@ const ESTADOS = [
   'PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
 ]
 
+interface ModeloResumo {
+  id: string
+  titulo: string
+}
+
 type Tristate = '' | 'sim' | 'nao'
 
 function tristateParaBooleano(valor: Tristate): boolean | null {
@@ -33,6 +38,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
   const [encontrado, setEncontrado] = useState(true)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
+  const [modelos, setModelos] = useState<ModeloResumo[]>([])
   const [form, setForm] = useState({
     titulo: '',
     descricao: '',
@@ -47,7 +53,15 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
     requerIcms: '' as Tristate,
     requerRetencoes: '' as Tristate,
     ativo: true,
+    proximoModeloId: '',
   })
+
+  useEffect(() => {
+    fetch('/api/modelos-obrigacao')
+      .then(res => res.json())
+      .then(dados => setModelos(Array.isArray(dados) ? dados.filter((m: ModeloResumo) => m.id !== params.id) : []))
+      .catch(err => console.error('Erro ao carregar modelos:', err))
+  }, [params.id])
 
   useEffect(() => {
     fetch(`/api/modelos-obrigacao/${params.id}`)

@@ -3,7 +3,7 @@ export const fetchCache = 'force-no-store'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getUsuarioAtual } from '@/lib/auth'
-import { competenciaAtual, dataVencimento, modeloAplicavel } from '@/lib/obrigacoesEngine'
+import { competenciaAtual, dataVencimento, modeloAplicavel, competenciaAntesDoClienteDesde } from '@/lib/obrigacoesEngine'
 
 async function conectarBanco() {
   try {
@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
     }[] = []
 
     for (const cliente of clientes) {
+      if (competenciaAntesDoClienteDesde(competencia, cliente.clienteDesde)) continue
       for (const modelo of modelos) {
         if (!modeloAplicavel(modelo, cliente)) continue
 

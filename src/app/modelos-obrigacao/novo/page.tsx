@@ -1,12 +1,17 @@
 // src/app/modelos-obrigacao/novo/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import AppShell from '@/components/AppShell'
 import { REGIMES_TRIBUTARIOS } from '@/lib/regimes'
+
+interface ModeloResumo {
+  id: string
+  titulo: string
+}
 
 const ESTADOS = [
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB',
@@ -27,6 +32,7 @@ export default function NovoModelo() {
   const router = useRouter()
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
+  const [modelos, setModelos] = useState<ModeloResumo[]>([])
   const [form, setForm] = useState({
     titulo: '',
     descricao: '',
@@ -40,7 +46,15 @@ export default function NovoModelo() {
     requerFuncionarios: '' as Tristate,
     requerIcms: '' as Tristate,
     requerRetencoes: '' as Tristate,
+    proximoModeloId: '',
   })
+
+  useEffect(() => {
+    fetch('/api/modelos-obrigacao')
+      .then(res => res.json())
+      .then(dados => setModelos(Array.isArray(dados) ? dados : []))
+      .catch(err => console.error('Erro ao carregar modelos:', err))
+  }, [])
 
   const atualizarCampo = (campo: string, valor: string) => {
     setForm(prev => ({ ...prev, [campo]: valor }))
@@ -85,6 +99,7 @@ export default function NovoModelo() {
           requerFuncionarios: tristateParaBooleano(form.requerFuncionarios),
           requerIcms: tristateParaBooleano(form.requerIcms),
           requerRetencoes: tristateParaBooleano(form.requerRetencoes),
+          proximoModeloId: form.proximoModeloId || null,
         }),
       })
 
@@ -275,6 +290,24 @@ export default function NovoModelo() {
               className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
               placeholder="ISS, IR, SPED"
             />
+          </div>
+
+          <div>
+            <label className="block text-slate-700 mb-2 font-semibold">Próxima obrigação (gerar ao concluir)</label>
+            <select
+              value={form.proximoModeloId}
+              onChange={e => atualizarCampo('proximoModeloId', e.target.value)}
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
+            >
+              <option value="">Nenhuma</option>
+              {modelos.map(m => (
+                <option key={m.id} value={m.id}>{m.titulo}</option>
+              ))}
+            </select>
+            <p className="text-slate-500 text-sm mt-1">
+              Ao concluir uma obrigação gerada por este modelo, cria automaticamente uma nova obrigação deste
+              modelo escolhido para o mesmo cliente.
+            </p>
           </div>
 
           <button

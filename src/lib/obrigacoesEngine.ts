@@ -45,6 +45,16 @@ export function dataVencimento(competencia: string, diaVencimento: number): Date
   return new Date(ano, mes - 1, dia)
 }
 
+// Compara a competência (YYYY-MM) com a data em que o cliente passou a ser atendido
+// pelo escritório: se a competência for anterior a esse mês, não deve gerar obrigação.
+export function competenciaAntesDoClienteDesde(competencia: string, clienteDesde: Date | null): boolean {
+  if (!clienteDesde) return false
+  const [anoStr, mesStr] = competencia.split('-')
+  const competenciaData = new Date(Number(anoStr), Number(mesStr) - 1, 1)
+  const desdeData = new Date(clienteDesde.getFullYear(), clienteDesde.getMonth(), 1)
+  return competenciaData < desdeData
+}
+
 // Recalcula as obrigações auto-geradas (por modelo) de UM cliente para a competência atual:
 // - remove as que ainda estão pendentes e cujo modelo não se aplica mais (ex: mudou de regime)
 // - cria as que passaram a se aplicar e ainda não existem para essa competência
@@ -58,6 +68,10 @@ export async function recalcularObrigacoesCliente(prisma: any, userId: string, c
   ])
 
   if (!cliente || !cliente.ativo) {
+    return { removidas: 0, criadas: 0, competencia }
+  }
+
+  if (competenciaAntesDoClienteDesde(competencia, cliente.clienteDesde)) {
     return { removidas: 0, criadas: 0, competencia }
   }
 

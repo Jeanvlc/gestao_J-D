@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
         requerIcms: data.requerIcms ?? null,
         requerRetencoes: data.requerRetencoes ?? null,
         ativo: data.ativo ?? true,
+        proximoModeloId: data.proximoModeloId || null,
         userId,
       },
     })

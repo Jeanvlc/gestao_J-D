@@ -52,6 +52,9 @@ model Cliente {
   situacaoCadastral  String?
   atividadePrincipal String?
   dataAbertura     DateTime?
+  // Data em que o cliente passou a ser atendido pelo escritório; o motor de obrigações
+  // não gera obrigações para competências anteriores a este mês.
+  clienteDesde     DateTime?
   // Usados pelo motor de obrigações para decidir quais modelos se aplicam ao cliente
   possuiFuncionarios Boolean @default(false)
   possuiIcms         Boolean @default(false)
@@ -67,6 +70,7 @@ model Cliente {
   pagamentosHonorario PagamentoHonorario[]
   fechamentosMensais FechamentoMensal[]
   lancamentosFinanceiros LancamentoFinanceiro[]
+  tarefas          Tarefa[]
 
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -95,6 +99,12 @@ model ModeloObrigacao {
   requerIcms         Boolean?
   requerRetencoes    Boolean?
   ativo            Boolean  @default(true)
+
+  // Ao concluir uma obrigação gerada por este modelo, cria automaticamente uma
+  // obrigação do "próximo modelo" para o mesmo cliente.
+  proximoModeloId  String?
+  proximoModelo    ModeloObrigacao?  @relation("ModeloSucessor", fields: [proximoModeloId], references: [id], onDelete: SetNull)
+  modelosAnteriores ModeloObrigacao[] @relation("ModeloSucessor")
 
   userId           String
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -190,6 +200,13 @@ model Tarefa {
   categoria     String?  // "Urgente", "Importante", "Rotina", etc
   checklist     Json     @default("[]") // [{ chave, label, concluido }]
 
+  tipo          String   @default("padrao") // padrao, societaria
+  etapaChave    String?  // chave da etapa do roteiro societário (quando tipo=societaria)
+  grupoSocietarioId String? // agrupa as tarefas de uma mesma abertura de empresa em sequência
+
+  clienteId     String?
+  clienteRef    Cliente? @relation(fields: [clienteId], references: [id], onDelete: SetNull)
+
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -198,6 +215,8 @@ model Tarefa {
 
   @@index([userId])
   @@index([status])
+  @@index([clienteId])
+  @@index([grupoSocietarioId])
 }
 
 // Contrato de honorário mensal de um cliente (valor recorrente + dia de vencimento)

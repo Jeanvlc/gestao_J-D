@@ -34,6 +34,7 @@ const formInicial = {
   situacaoCadastral: '',
   atividadePrincipal: '',
   dataAbertura: '',
+  clienteDesde: '',
   possuiFuncionarios: false,
   possuiIcms: false,
   possuiRetencoes: false,
@@ -385,6 +386,23 @@ export default function NovoCliente() {
             <p className="text-slate-500 text-sm">
               Cidade e estado são usados pelo motor de obrigações para aplicar regras locais (ex: Alvará, ICMS).
             </p>
+          </section>
+
+          <section className="space-y-4 border-t border-green-100 pt-5">
+            <h2 className="text-green-700 font-bold uppercase text-xs tracking-wide">Vínculo com o escritório</h2>
+            <div>
+              <label className="block text-slate-700 mb-2 font-semibold">Cliente desde</label>
+              <input
+                type="date"
+                value={form.clienteDesde}
+                onChange={e => atualizarCampo('clienteDesde', e.target.value)}
+                className="w-full sm:w-64 bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
+              />
+              <p className="text-slate-500 text-sm mt-1">
+                Data em que o cliente passou a ser atendido pelo escritório. O motor de obrigações não gera obrigações
+                para competências anteriores a este mês. Deixe em branco para gerar normalmente desde já.
+              </p>
+            </div>
           </section>
 
           <section className="space-y-3 border-t border-green-100 pt-5">
