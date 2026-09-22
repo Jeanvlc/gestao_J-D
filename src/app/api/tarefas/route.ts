@@ -31,9 +31,14 @@ export async function GET(request: NextRequest) {
     }
 
     const clienteId = request.nextUrl.searchParams.get('clienteId')
+    const grupoSocietarioId = request.nextUrl.searchParams.get('grupoSocietarioId')
 
     const tarefas = await prisma.tarefa.findMany({
-      where: { userId, ...(clienteId ? { clienteId } : {}) },
+      where: {
+        userId,
+        ...(clienteId ? { clienteId } : {}),
+        ...(grupoSocietarioId ? { grupoSocietarioId } : {}),
+      },
       orderBy: [{ status: 'asc' }, { dataVencimento: 'asc' }],
       include: { clienteRef: { select: { id: true, nome: true } } },
     })

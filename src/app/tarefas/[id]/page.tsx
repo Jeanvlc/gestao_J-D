@@ -46,6 +46,7 @@ export default function DetalheTarefa({ params }: { params: { id: string } }) {
   const [erro, setErro] = useState('')
   const [roteiro, setRoteiro] = useState<EtapaRoteiroSocietario[]>([])
   const [perguntarAvancar, setPerguntarAvancar] = useState(false)
+  const [confirmarDesfazer, setConfirmarDesfazer] = useState<string | null>(null)
 
   useEffect(() => {
     carregar()
@@ -137,6 +138,23 @@ export default function DetalheTarefa({ params }: { params: { id: string } }) {
     }
   }
 
+  const alterarStatus = async (novoStatus: string) => {
+    if (!tarefa) return
+    if (tarefa.status === 'concluida' && novoStatus !== 'concluida' && tarefa.grupoSocietarioId) {
+      try {
+        const res = await fetch(`/api/tarefas?grupoSocietarioId=${tarefa.grupoSocietarioId}`)
+        const outras = res.ok ? await res.json() : []
+        if (Array.isArray(outras) && outras.some((t: Tarefa) => t.id !== tarefa.id)) {
+          setConfirmarDesfazer(novoStatus)
+          return
+        }
+      } catch (error) {
+        console.error('Erro ao verificar tarefas vinculadas:', error)
+      }
+    }
+    salvarCampos({ status: novoStatus })
+  }
+
   const excluir = async () => {
     if (!window.confirm('Tem certeza que deseja excluir esta tarefa?')) return
     try {
@@ -208,6 +226,31 @@ export default function DetalheTarefa({ params }: { params: { id: string } }) {
           </div>
         )}
 
+        {confirmarDesfazer && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-4 rounded-lg mb-4">
+            <p className="font-semibold mb-3">
+              Esta tarefa está vinculada a outra etapa da abertura de empresa. Tem certeza que deseja desfazer a conclusão dela?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  salvarCampos({ status: confirmarDesfazer })
+                  setConfirmarDesfazer(null)
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+              >
+                Sim, desfazer
+              </button>
+              <button
+                onClick={() => setConfirmarDesfazer(null)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-semibold transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
         {perguntarAvancar && (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-4 rounded-lg mb-4">
             <p className="font-semibold mb-3">
@@ -266,7 +309,7 @@ export default function DetalheTarefa({ params }: { params: { id: string } }) {
               <p className="text-slate-500">Status</p>
               <select
                 value={tarefa.status}
-                onChange={e => salvarCampos({ status: e.target.value })}
+                onChange={e => alterarStatus(e.target.value)}
                 className="bg-white border border-green-300 rounded-lg px-3 py-1 text-slate-900 focus:outline-none focus:border-green-500"
               >
                 <option value="pendente">Pendente</option>

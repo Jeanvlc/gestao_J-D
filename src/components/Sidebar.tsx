@@ -8,7 +8,6 @@ import {
   FileCog,
   Wallet,
   Landmark,
-  ClipboardCheck,
   ListChecks,
   Settings,
   Plus,
@@ -23,7 +22,6 @@ const ITENS = [
   { href: '/tarefas', label: 'Tarefas', icon: ListChecks },
   { href: '/honorarios', label: 'Honorários', icon: Wallet },
   { href: '/financeiro', label: 'Financeiro do Escritório', icon: Landmark },
-  { href: '/fechamento', label: 'Fechamento Mensal', icon: ClipboardCheck },
   { href: '/configuracoes', label: 'Configurações', icon: Settings },
 ]
 

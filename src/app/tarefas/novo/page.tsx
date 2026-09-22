@@ -17,6 +17,7 @@ export default function NovaTarefa() {
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
   const [clientes, setClientes] = useState<ClienteResumo[]>([])
+  const [buscaCliente, setBuscaCliente] = useState('')
   const [form, setForm] = useState({
     titulo: '',
     descricao: '',
@@ -37,6 +38,10 @@ export default function NovaTarefa() {
   const atualizarCampo = (campo: string, valor: string) => {
     setForm(prev => ({ ...prev, [campo]: valor }))
   }
+
+  const clientesFiltrados = clientes.filter(c =>
+    c.nome.toLowerCase().includes(buscaCliente.toLowerCase())
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -130,16 +135,27 @@ export default function NovaTarefa() {
             <label className="block text-slate-700 mb-2 font-semibold">
               Cliente {form.tipo === 'societaria' ? '*' : '(opcional)'}
             </label>
+            <input
+              type="text"
+              value={buscaCliente}
+              onChange={e => setBuscaCliente(e.target.value)}
+              placeholder="Buscar cliente por nome..."
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500 mb-2"
+            />
             <select
               value={form.clienteId}
               onChange={e => atualizarCampo('clienteId', e.target.value)}
+              size={buscaCliente ? Math.min(clientesFiltrados.length + 1, 6) : undefined}
               className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
             >
               <option value="">Nenhum</option>
-              {clientes.map(c => (
+              {clientesFiltrados.map(c => (
                 <option key={c.id} value={c.id}>{c.nome}</option>
               ))}
             </select>
+            {buscaCliente && clientesFiltrados.length === 0 && (
+              <p className="text-slate-500 text-sm mt-1">Nenhum cliente encontrado.</p>
+            )}
           </div>
 
           <div>
