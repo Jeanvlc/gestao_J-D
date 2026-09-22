@@ -12,6 +12,14 @@ const ESTADOS = [
   'PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
 ]
 
+interface TarefaVinculada {
+  id: string
+  titulo: string
+  status: string
+  tipo: string
+  etapaChave: string | null
+}
+
 const formInicial = {
   nome: '',
   razaoSocial: '',
@@ -51,6 +59,14 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
   const [erro, setErro] = useState('')
   const [avisoCnpj, setAvisoCnpj] = useState('')
   const [form, setForm] = useState(formInicial)
+  const [tarefasVinculadas, setTarefasVinculadas] = useState<TarefaVinculada[]>([])
+
+  useEffect(() => {
+    fetch(`/api/tarefas?clienteId=${params.id}`)
+      .then(res => res.json())
+      .then(dados => setTarefasVinculadas(Array.isArray(dados) ? dados : []))
+      .catch(err => console.error('Erro ao carregar tarefas do cliente:', err))
+  }, [params.id])
 
   useEffect(() => {
     fetch(`/api/clientes/${params.id}`)
@@ -562,6 +578,31 @@ export default function DetalheCliente({ params }: { params: { id: string } }) {
             {salvando ? 'Salvando...' : 'Salvar Alterações'}
           </button>
         </form>
+
+        {tarefasVinculadas.length > 0 && (
+          <div className="bg-white rounded-lg p-6 border border-green-100 shadow-sm mt-6">
+            <h2 className="text-slate-900 font-bold mb-4">Tarefas vinculadas</h2>
+            <div className="space-y-2">
+              {tarefasVinculadas.map(t => (
+                <Link
+                  key={t.id}
+                  href={`/tarefas/${t.id}`}
+                  className="flex items-center justify-between p-3 rounded-lg border border-green-100 hover:bg-green-50 transition"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-800">{t.titulo}</span>
+                    {t.tipo === 'societaria' && (
+                      <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs font-bold">
+                        Societária
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-slate-500 text-sm">{t.status}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   )

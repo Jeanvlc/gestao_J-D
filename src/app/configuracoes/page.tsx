@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus, Trash2, Save } from 'lucide-react'
+import { Plus, Trash2, Save, ArrowUp, ArrowDown } from 'lucide-react'
 import AppShell from '@/components/AppShell'
 
 interface ItemFechamento {
@@ -12,6 +12,11 @@ interface ItemFechamento {
 }
 
 interface ItemTarefa {
+  chave: string
+  label: string
+}
+
+interface EtapaSocietaria {
   chave: string
   label: string
 }
@@ -31,8 +36,10 @@ export default function ConfiguracoesPage() {
   const [mensagem, setMensagem] = useState('')
   const [checklistFechamento, setChecklistFechamento] = useState<ItemFechamento[]>([])
   const [checklistTarefa, setChecklistTarefa] = useState<ItemTarefa[]>([])
+  const [roteiroSocietario, setRoteiroSocietario] = useState<EtapaSocietaria[]>([])
   const [novoItemFechamento, setNovoItemFechamento] = useState('')
   const [novoItemTarefa, setNovoItemTarefa] = useState('')
+  const [novaEtapaSocietaria, setNovaEtapaSocietaria] = useState('')
 
   useEffect(() => {
     fetch('/api/configuracoes')
@@ -40,6 +47,7 @@ export default function ConfiguracoesPage() {
       .then(dados => {
         setChecklistFechamento(dados.checklistFechamento ?? [])
         setChecklistTarefa(dados.checklistTarefa ?? [])
+        setRoteiroSocietario(dados.roteiroSocietario ?? [])
       })
       .catch(err => console.error('Erro ao carregar configurações:', err))
       .finally(() => setCarregando(false))
@@ -75,6 +83,30 @@ export default function ConfiguracoesPage() {
 
   const removerItemTarefa = (chave: string) => {
     setChecklistTarefa(prev => prev.filter(item => item.chave !== chave))
+  }
+
+  const adicionarEtapaSocietaria = () => {
+    if (!novaEtapaSocietaria.trim()) return
+    setRoteiroSocietario(prev => [
+      ...prev,
+      { chave: slugify(novaEtapaSocietaria), label: novaEtapaSocietaria.trim() },
+    ])
+    setNovaEtapaSocietaria('')
+  }
+
+  const removerEtapaSocietaria = (chave: string) => {
+    setRoteiroSocietario(prev => prev.filter(item => item.chave !== chave))
+  }
+
+  const moverEtapaSocietaria = (indice: number, direcao: -1 | 1) => {
+    setRoteiroSocietario(prev => {
+      const novoIndice = indice + direcao
+      if (novoIndice < 0 || novoIndice >= prev.length) return prev
+      const copia = [...prev]
+      const [item] = copia.splice(indice, 1)
+      copia.splice(novoIndice, 0, item)
+      return copia
+    })
   }
 
   const salvar = async (chave: string, valor: unknown) => {
@@ -226,6 +258,73 @@ export default function ConfiguracoesPage() {
           >
             <Save className="w-4 h-4" />
             Salvar Checklist de Tarefas
+          </button>
+        </section>
+
+        <section className="bg-white rounded-lg p-6 border border-green-100 shadow-sm mt-8">
+          <h2 className="text-slate-900 font-bold mb-1">Roteiro de Abertura de Empresa (Societário)</h2>
+          <p className="text-slate-500 text-sm mb-4">
+            Sequência de etapas usada nas tarefas do tipo &quot;Abertura de Empresa&quot;. A ordem importa: ao concluir
+            uma etapa, a próxima da lista é oferecida automaticamente.
+          </p>
+
+          <div className="space-y-2 mb-4">
+            {roteiroSocietario.map((item, indice) => (
+              <div key={item.chave} className="flex items-center gap-3 p-3 rounded-lg border border-green-100">
+                <span className="text-slate-400 text-sm font-mono w-6">{indice + 1}.</span>
+                <span className="flex-1 text-slate-800">{item.label}</span>
+                <button
+                  onClick={() => moverEtapaSocietaria(indice, -1)}
+                  disabled={indice === 0}
+                  className="text-slate-500 hover:text-green-700 disabled:opacity-30"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => moverEtapaSocietaria(indice, 1)}
+                  disabled={indice === roteiroSocietario.length - 1}
+                  className="text-slate-500 hover:text-green-700 disabled:opacity-30"
+                >
+                  <ArrowDown className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => removerEtapaSocietaria(item.chave)}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))}
+            {roteiroSocietario.length === 0 && (
+              <p className="text-slate-500 text-sm">Nenhuma etapa. Adicione abaixo.</p>
+            )}
+          </div>
+
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={novaEtapaSocietaria}
+              onChange={e => setNovaEtapaSocietaria(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), adicionarEtapaSocietaria())}
+              placeholder="Nova etapa do roteiro"
+              className="flex-1 bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
+            />
+            <button
+              onClick={adicionarEtapaSocietaria}
+              className="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-semibold transition"
+            >
+              <Plus className="w-4 h-4" />
+              Adicionar
+            </button>
+          </div>
+
+          <button
+            onClick={() => salvar('checklist_societario', roteiroSocietario)}
+            disabled={salvando}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-6 py-3 rounded-lg font-semibold transition"
+          >
+            <Save className="w-4 h-4" />
+            Salvar Roteiro Societário
           </button>
         </section>
       </div>

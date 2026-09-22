@@ -1,23 +1,38 @@
 // src/app/tarefas/novo/page.tsx
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import AppShell from '@/components/AppShell'
 
+interface ClienteResumo {
+  id: string
+  nome: string
+}
+
 export default function NovaTarefa() {
   const router = useRouter()
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
+  const [clientes, setClientes] = useState<ClienteResumo[]>([])
   const [form, setForm] = useState({
     titulo: '',
     descricao: '',
     dataVencimento: '',
     prioridade: 'normal',
     categoria: '',
+    clienteId: '',
+    tipo: 'padrao',
   })
+
+  useEffect(() => {
+    fetch('/api/clientes')
+      .then(res => res.json())
+      .then(dados => setClientes(Array.isArray(dados) ? dados : []))
+      .catch(err => console.error('Erro ao carregar clientes:', err))
+  }, [])
 
   const atualizarCampo = (campo: string, valor: string) => {
     setForm(prev => ({ ...prev, [campo]: valor }))
@@ -27,7 +42,12 @@ export default function NovaTarefa() {
     e.preventDefault()
     setErro('')
 
-    if (!form.titulo) {
+    if (form.tipo === 'societaria') {
+      if (!form.clienteId) {
+        setErro('Abertura de empresa exige um cliente vinculado.')
+        return
+      }
+    } else if (!form.titulo) {
       setErro('Preencha o título da tarefa.')
       return
     }
@@ -38,11 +58,13 @@ export default function NovaTarefa() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          titulo: form.titulo,
+          titulo: form.titulo || null,
           descricao: form.descricao || null,
           dataVencimento: form.dataVencimento || null,
           prioridade: form.prioridade,
           categoria: form.categoria || null,
+          clienteId: form.clienteId || null,
+          tipo: form.tipo,
         }),
       })
 
@@ -75,13 +97,49 @@ export default function NovaTarefa() {
           )}
 
           <div>
-            <label className="block text-slate-700 mb-2 font-semibold">Título *</label>
-            <input
-              type="text"
-              value={form.titulo}
-              onChange={e => atualizarCampo('titulo', e.target.value)}
+            <label className="block text-slate-700 mb-2 font-semibold">Tipo de tarefa</label>
+            <select
+              value={form.tipo}
+              onChange={e => atualizarCampo('tipo', e.target.value)}
               className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
-            />
+            >
+              <option value="padrao">Padrão</option>
+              <option value="societaria">Abertura de Empresa (societária)</option>
+            </select>
+            {form.tipo === 'societaria' && (
+              <p className="text-slate-500 text-sm mt-1">
+                Cria a primeira etapa do roteiro societário configurado em Configurações. Ao concluir cada etapa,
+                você poderá gerar a próxima.
+              </p>
+            )}
+          </div>
+
+          {form.tipo !== 'societaria' && (
+            <div>
+              <label className="block text-slate-700 mb-2 font-semibold">Título *</label>
+              <input
+                type="text"
+                value={form.titulo}
+                onChange={e => atualizarCampo('titulo', e.target.value)}
+                className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="block text-slate-700 mb-2 font-semibold">
+              Cliente {form.tipo === 'societaria' ? '*' : '(opcional)'}
+            </label>
+            <select
+              value={form.clienteId}
+              onChange={e => atualizarCampo('clienteId', e.target.value)}
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
+            >
+              <option value="">Nenhum</option>
+              {clientes.map(c => (
+                <option key={c.id} value={c.id}>{c.nome}</option>
+              ))}
+            </select>
           </div>
 
           <div>

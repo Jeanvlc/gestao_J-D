@@ -22,6 +22,14 @@ interface Tarefa {
   categoria: string | null
   dataVencimento: string | null
   checklist: ItemChecklistTarefa[]
+  tipo: string
+  etapaChave: string | null
+  clienteRef: { id: string; nome: string } | null
+}
+
+interface ClienteResumo {
+  id: string
+  nome: string
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -38,8 +46,10 @@ const STATUS_COR: Record<string, string> = {
 
 export default function TarefasPage() {
   const [tarefas, setTarefas] = useState<Tarefa[]>([])
+  const [clientes, setClientes] = useState<ClienteResumo[]>([])
   const [carregando, setCarregando] = useState(true)
   const [filtro, setFiltro] = useState('todas')
+  const [filtroCliente, setFiltroCliente] = useState('')
 
   useEffect(() => {
     fetch('/api/tarefas')
@@ -47,9 +57,17 @@ export default function TarefasPage() {
       .then(dados => setTarefas(Array.isArray(dados) ? dados : []))
       .catch(err => console.error('Erro ao carregar tarefas:', err))
       .finally(() => setCarregando(false))
+    fetch('/api/clientes')
+      .then(res => res.json())
+      .then(dados => setClientes(Array.isArray(dados) ? dados : []))
+      .catch(err => console.error('Erro ao carregar clientes:', err))
   }, [])
 
-  const tarefasFiltradas = tarefas.filter(t => filtro === 'todas' || t.status === filtro)
+  const tarefasFiltradas = tarefas.filter(t => {
+    if (filtro !== 'todas' && t.status !== filtro) return false
+    if (filtroCliente && t.clienteRef?.id !== filtroCliente) return false
+    return true
+  })
 
   return (
     <AppShell>
@@ -68,7 +86,7 @@ export default function TarefasPage() {
           </Link>
         </div>
 
-        <div className="flex gap-3 mb-6 flex-wrap">
+        <div className="flex gap-3 mb-6 flex-wrap items-center">
           {['todas', 'pendente', 'em_progresso', 'concluida'].map(f => (
             <button
               key={f}
@@ -80,6 +98,16 @@ export default function TarefasPage() {
               {f === 'todas' ? 'Todas' : STATUS_LABEL[f]}
             </button>
           ))}
+          <select
+            value={filtroCliente}
+            onChange={e => setFiltroCliente(e.target.value)}
+            className="bg-white border border-green-300 rounded-lg px-3 py-2 text-slate-900 text-sm focus:outline-none focus:border-green-500"
+          >
+            <option value="">Todos os clientes</option>
+            {clientes.map(c => (
+              <option key={c.id} value={c.id}>{c.nome}</option>
+            ))}
+          </select>
         </div>
 
         {carregando ? (
@@ -100,13 +128,21 @@ export default function TarefasPage() {
                   className="flex items-center justify-between bg-white hover:bg-green-50 rounded-lg p-5 transition border border-green-100 shadow-sm"
                 >
                   <div>
-                    <p className="text-slate-900 font-semibold text-lg">{t.titulo}</p>
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <p className="text-slate-900 font-semibold text-lg">{t.titulo}</p>
+                      {t.tipo === 'societaria' && (
+                        <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-xs font-bold">
+                          Societária
+                        </span>
+                      )}
+                    </div>
                     <p className="text-slate-500 text-sm">
                       {total > 0 ? `${feitos}/${total} itens do checklist · ` : ''}
                       {t.dataVencimento
                         ? format(new Date(t.dataVencimento), 'dd MMM yyyy', { locale: ptBR })
                         : 'Sem prazo'}
                       {t.categoria ? ` · ${t.categoria}` : ''}
+                      {t.clienteRef ? ` · Cliente: ${t.clienteRef.nome}` : ''}
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUS_COR[t.status]}`}>

@@ -13,6 +13,11 @@ interface ItemChecklistTarefa {
   concluido: boolean
 }
 
+interface EtapaRoteiroSocietario {
+  chave: string
+  label: string
+}
+
 interface Tarefa {
   id: string
   titulo: string
@@ -22,6 +27,11 @@ interface Tarefa {
   prioridade: string
   categoria: string | null
   checklist: ItemChecklistTarefa[]
+  tipo: string
+  etapaChave: string | null
+  grupoSocietarioId: string | null
+  clienteId: string | null
+  clienteRef: { id: string; nome: string } | null
 }
 
 function paraInputDate(iso: string | null) {
@@ -34,9 +44,15 @@ export default function DetalheTarefa({ params }: { params: { id: string } }) {
   const [carregando, setCarregando] = useState(true)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState('')
+  const [roteiro, setRoteiro] = useState<EtapaRoteiroSocietario[]>([])
+  const [perguntarAvancar, setPerguntarAvancar] = useState(false)
 
   useEffect(() => {
     carregar()
+    fetch('/api/configuracoes')
+      .then(res => res.json())
+      .then(dados => setRoteiro(dados.roteiroSocietario ?? []))
+      .catch(err => console.error('Erro ao carregar roteiro societário:', err))
   }, [])
 
   const carregar = async () => {
@@ -83,7 +99,43 @@ export default function DetalheTarefa({ params }: { params: { id: string } }) {
     salvarCampos({ checklist })
   }
 
-  const finalizar = () => salvarCampos({ status: 'concluida' })
+  const etapaIndice = tarefa && tarefa.tipo === 'societaria'
+    ? roteiro.findIndex(e => e.chave === tarefa.etapaChave)
+    : -1
+  const proximaEtapa = etapaIndice >= 0 ? roteiro[etapaIndice + 1] : undefined
+
+  const finalizar = () => {
+    if (tarefa?.tipo === 'societaria' && proximaEtapa) {
+      setPerguntarAvancar(true)
+      return
+    }
+    salvarCampos({ status: 'concluida' })
+  }
+
+  const avancarEtapa = async (avancar: boolean) => {
+    setPerguntarAvancar(false)
+    await salvarCampos({ status: 'concluida' })
+    if (!avancar || !tarefa || !proximaEtapa) return
+
+    try {
+      const res = await fetch('/api/tarefas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tipo: 'societaria',
+          etapaChave: proximaEtapa.chave,
+          grupoSocietarioId: tarefa.grupoSocietarioId,
+          clienteId: tarefa.clienteId,
+        }),
+      })
+      if (!res.ok) throw new Error('Erro ao criar próxima etapa')
+      const nova = await res.json()
+      router.push(`/tarefas/${nova.id}`)
+    } catch (error) {
+      console.error(error)
+      setErro('Não foi possível gerar a próxima etapa.')
+    }
+  }
 
   const excluir = async () => {
     if (!window.confirm('Tem certeza que deseja excluir esta tarefa?')) return
@@ -156,9 +208,49 @@ export default function DetalheTarefa({ params }: { params: { id: string } }) {
           </div>
         )}
 
+        {perguntarAvancar && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-4 rounded-lg mb-4">
+            <p className="font-semibold mb-3">
+              Avançar para a próxima etapa: &quot;{proximaEtapa?.label}&quot;?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => avancarEtapa(true)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+              >
+                Sim
+              </button>
+              <button
+                onClick={() => avancarEtapa(false)}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-semibold transition"
+              >
+                Não
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-lg p-6 border border-green-100 shadow-sm space-y-4 mb-4">
+          {tarefa.tipo === 'societaria' && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-bold">
+                Abertura de Empresa
+              </span>
+              {etapaIndice >= 0 && (
+                <span className="text-slate-500 text-sm">
+                  Etapa {etapaIndice + 1} de {roteiro.length}
+                </span>
+              )}
+              {tarefa.clienteRef && (
+                <span className="text-slate-500 text-sm">· Cliente: {tarefa.clienteRef.nome}</span>
+              )}
+            </div>
+          )}
           <h1 className="text-2xl font-bold text-slate-900">{tarefa.titulo}</h1>
           {tarefa.descricao && <p className="text-slate-600">{tarefa.descricao}</p>}
+          {tarefa.tipo !== 'societaria' && tarefa.clienteRef && (
+            <p className="text-slate-500 text-sm">Cliente: {tarefa.clienteRef.nome}</p>
+          )}
 
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>

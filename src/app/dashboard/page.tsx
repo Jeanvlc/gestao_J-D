@@ -5,15 +5,41 @@ import { useEffect, useState } from 'react'
 import {
   AlertCircle,
   Calendar,
+  CalendarDays,
   CheckCircle,
   Clock,
   Plus,
   Sparkles,
+  Wallet,
+  Users,
+  ListChecks,
 } from 'lucide-react'
 import Link from 'next/link'
 import { format, isBefore, isToday, addDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import AppShell from '@/components/AppShell'
+import { REGIME_LABELS } from '@/lib/regimes'
+
+interface DashboardExtra {
+  competencia: string
+  clientesPorRegime: Record<string, number>
+  totalClientesAtivos: number
+  financeiro: {
+    honorariosAReceber: number
+    honorariosRecebidos: number
+    entradas: number
+    saidas: number
+  }
+  tarefas: {
+    totalPendentes: number
+    totalAtrasadas: number
+    societariasEmAndamento: { clienteNome: string | null; etapaAtual: string | null; tarefaId: string }[]
+  }
+}
+
+function formatarMoeda(valor: number) {
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
 
 interface Obrigacao {
   id: string
@@ -29,6 +55,7 @@ interface Stats {
   vencendoHoje: number
   vencendoSemana: number
   pendentes: number
+  concluidasNoMes: number
 }
 
 export default function Dashboard() {
@@ -37,15 +64,21 @@ export default function Dashboard() {
     atrasadas: 0,
     vencendoHoje: 0,
     vencendoSemana: 0,
-    pendentes: 0
+    pendentes: 0,
+    concluidasNoMes: 0,
   })
   const [carregando, setCarregando] = useState(true)
   const [filtro, setFiltro] = useState<string>('todos')
   const [gerando, setGerando] = useState(false)
   const [mensagemGeracao, setMensagemGeracao] = useState('')
+  const [extra, setExtra] = useState<DashboardExtra | null>(null)
 
   useEffect(() => {
     carregarObrigacoes()
+    fetch('/api/dashboard')
+      .then(res => res.json())
+      .then(dados => setExtra(dados))
+      .catch(err => console.error('Erro ao carregar estatísticas do dashboard:', err))
   }, [])
 
   const carregarObrigacoes = async () => {
@@ -94,12 +127,21 @@ export default function Dashboard() {
     let vencendoHoje = 0
     let vencendoSemana = 0
     let pendentes = 0
+    let concluidasNoMes = 0
 
     obrig.forEach(o => {
       const vencimento = new Date(o.vencimento)
-      
+
       if (o.status === 'pendente' || o.status === 'em_andamento') {
         pendentes++
+      }
+
+      if (
+        o.status === 'concluida' &&
+        vencimento.getMonth() === agora.getMonth() &&
+        vencimento.getFullYear() === agora.getFullYear()
+      ) {
+        concluidasNoMes++
       }
 
       if (isBefore(vencimento, hoje) && o.status !== 'concluida') {
@@ -111,7 +153,7 @@ export default function Dashboard() {
       }
     })
 
-    setStats({ atrasadas, vencendoHoje, vencendoSemana, pendentes })
+    setStats({ atrasadas, vencendoHoje, vencendoSemana, pendentes, concluidasNoMes })
   }
 
   const obrigacoesFiltradas = obrigacoes.filter(o => {
@@ -161,6 +203,13 @@ export default function Dashboard() {
             <p className="text-slate-500">Gestão de Obrigações - MacContab</p>
           </div>
           <div className="flex gap-3 flex-wrap">
+            <Link
+              href="/obrigacoes/calendario"
+              className="flex items-center gap-2 bg-white hover:bg-slate-100 text-slate-700 px-4 py-3 rounded-lg font-semibold transition border border-green-200"
+            >
+              <CalendarDays className="w-5 h-5" />
+              Calendário
+            </Link>
             <button
               onClick={gerarObrigacoesDoMes}
               disabled={gerando}
@@ -188,33 +237,125 @@ export default function Dashboard() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <StatCard 
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+          <StatCard
             icon={<AlertCircle className="w-6 h-6" />}
             titulo="Atrasadas"
             valor={stats.atrasadas}
             cor="bg-red-500"
             clicavel={() => setFiltro('atrasadas')}
           />
-          <StatCard 
+          <StatCard
             icon={<Calendar className="w-6 h-6" />}
             titulo="Vencendo Hoje"
             valor={stats.vencendoHoje}
             cor="bg-orange-500"
           />
-          <StatCard 
+          <StatCard
             icon={<Clock className="w-6 h-6" />}
             titulo="Próximos 7 Dias"
             valor={stats.vencendoSemana}
             cor="bg-yellow-500"
           />
-          <StatCard 
+          <StatCard
             icon={<CheckCircle className="w-6 h-6" />}
             titulo="Pendentes"
             valor={stats.pendentes}
             cor="bg-green-500"
           />
+          <StatCard
+            icon={<CheckCircle className="w-6 h-6" />}
+            titulo="Concluídas no Mês"
+            valor={stats.concluidasNoMes}
+            cor="bg-blue-500"
+            clicavel={() => setFiltro('concluidas')}
+          />
         </div>
+
+        {extra && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+            <div className="bg-white rounded-lg p-6 border border-green-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Wallet className="w-5 h-5 text-green-700" />
+                <h2 className="text-slate-900 font-bold">Financeiro do Mês</h2>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Honorários recebidos</span>
+                  <span className="text-green-700 font-semibold">{formatarMoeda(extra.financeiro.honorariosRecebidos)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Honorários a receber</span>
+                  <span className="text-amber-700 font-semibold">{formatarMoeda(extra.financeiro.honorariosAReceber)}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-slate-100">
+                  <span className="text-slate-500">Entradas do escritório</span>
+                  <span className="text-green-700 font-semibold">{formatarMoeda(extra.financeiro.entradas)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Saídas do escritório</span>
+                  <span className="text-red-700 font-semibold">{formatarMoeda(extra.financeiro.saidas)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 border border-green-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <Users className="w-5 h-5 text-green-700" />
+                <h2 className="text-slate-900 font-bold">Clientes por Regime</h2>
+              </div>
+              <div className="space-y-2">
+                {Object.entries(extra.clientesPorRegime).map(([regime, qtd]) => {
+                  const pct = extra.totalClientesAtivos > 0 ? Math.round((qtd / extra.totalClientesAtivos) * 100) : 0
+                  return (
+                    <div key={regime}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-slate-600">{REGIME_LABELS[regime] ?? regime}</span>
+                        <span className="text-slate-500">{qtd}</span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2">
+                        <div className="bg-green-600 h-2 rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+                {Object.keys(extra.clientesPorRegime).length === 0 && (
+                  <p className="text-slate-500 text-sm">Nenhum cliente ativo.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 border border-green-100 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <ListChecks className="w-5 h-5 text-green-700" />
+                <h2 className="text-slate-900 font-bold">Tarefas em Andamento</h2>
+              </div>
+              <div className="flex gap-4 text-sm mb-3">
+                <span className="text-slate-600">
+                  Pendentes: <strong>{extra.tarefas.totalPendentes}</strong>
+                </span>
+                <span className="text-red-600">
+                  Atrasadas: <strong>{extra.tarefas.totalAtrasadas}</strong>
+                </span>
+              </div>
+              {extra.tarefas.societariasEmAndamento.length > 0 && (
+                <div className="space-y-2 border-t border-slate-100 pt-3">
+                  <p className="text-slate-500 text-xs font-semibold uppercase">Aberturas de empresa em curso</p>
+                  {extra.tarefas.societariasEmAndamento.map(g => (
+                    <Link
+                      key={g.tarefaId}
+                      href={`/tarefas/${g.tarefaId}`}
+                      className="block text-sm hover:text-green-700 transition"
+                    >
+                      <span className="font-semibold text-slate-800">{g.clienteNome ?? 'Cliente'}</span>
+                      <span className="text-slate-500"> · {g.etapaAtual}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Filtros */}
         <div className="flex gap-3 mb-8 flex-wrap">

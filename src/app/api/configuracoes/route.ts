@@ -6,8 +6,10 @@ import { getUsuarioAtual } from '@/lib/auth'
 import {
   obterTemplateChecklistFechamento,
   obterTemplateChecklistTarefa,
+  obterRoteiroSocietario,
   CHAVE_CHECKLIST_FECHAMENTO,
   CHAVE_CHECKLIST_TAREFA,
+  CHAVE_ROTEIRO_SOCIETARIO,
 } from '@/lib/configuracoes'
 
 async function conectarBanco() {
@@ -20,7 +22,7 @@ async function conectarBanco() {
   }
 }
 
-const CHAVES_VALIDAS = [CHAVE_CHECKLIST_FECHAMENTO, CHAVE_CHECKLIST_TAREFA]
+const CHAVES_VALIDAS = [CHAVE_CHECKLIST_FECHAMENTO, CHAVE_CHECKLIST_TAREFA, CHAVE_ROTEIRO_SOCIETARIO]
 
 export async function GET(request: NextRequest) {
   const usuario = await getUsuarioAtual()
@@ -36,12 +38,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    const [checklistFechamento, checklistTarefa] = await Promise.all([
+    const [checklistFechamento, checklistTarefa, roteiroSocietario] = await Promise.all([
       obterTemplateChecklistFechamento(prisma, userId),
       obterTemplateChecklistTarefa(prisma, userId),
+      obterRoteiroSocietario(prisma, userId),
     ])
 
-    return NextResponse.json({ checklistFechamento, checklistTarefa })
+    return NextResponse.json({ checklistFechamento, checklistTarefa, roteiroSocietario })
   } catch (error) {
     console.error('Erro ao buscar configurações:', error)
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 })

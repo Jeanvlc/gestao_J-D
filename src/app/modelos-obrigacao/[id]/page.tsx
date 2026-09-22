@@ -88,6 +88,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           requerIcms: booleanoParaTristate(dados.requerIcms),
           requerRetencoes: booleanoParaTristate(dados.requerRetencoes),
           ativo: dados.ativo ?? true,
+          proximoModeloId: dados.proximoModeloId ?? '',
         })
       })
       .catch(err => console.error('Erro ao carregar modelo:', err))
@@ -138,6 +139,7 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
           requerIcms: tristateParaBooleano(form.requerIcms),
           requerRetencoes: tristateParaBooleano(form.requerRetencoes),
           ativo: form.ativo,
+          proximoModeloId: form.proximoModeloId || null,
         }),
       })
 
@@ -372,6 +374,24 @@ export default function DetalheModelo({ params }: { params: { id: string } }) {
               onChange={e => atualizarCampo('tags', e.target.value)}
               className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-slate-700 mb-2 font-semibold">Próxima obrigação (gerar ao concluir)</label>
+            <select
+              value={form.proximoModeloId}
+              onChange={e => atualizarCampo('proximoModeloId', e.target.value)}
+              className="w-full bg-white border border-green-300 rounded-lg px-4 py-2 text-slate-900 focus:outline-none focus:border-green-500"
+            >
+              <option value="">Nenhuma</option>
+              {modelos.map(m => (
+                <option key={m.id} value={m.id}>{m.titulo}</option>
+              ))}
+            </select>
+            <p className="text-slate-500 text-sm mt-1">
+              Ao concluir uma obrigação gerada por este modelo, cria automaticamente uma nova obrigação deste
+              modelo escolhido para o mesmo cliente.
+            </p>
           </div>
 
           <label className="flex items-center gap-2 text-slate-600">

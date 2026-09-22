@@ -31,7 +31,10 @@ export async function GET(
       return NextResponse.json({ error: 'Banco indisponível' }, { status: 503 })
     }
 
-    const tarefa = await prisma.tarefa.findFirst({ where: { id: params.id, userId } })
+    const tarefa = await prisma.tarefa.findFirst({
+      where: { id: params.id, userId },
+      include: { clienteRef: { select: { id: true, nome: true } } },
+    })
     if (!tarefa) {
       return NextResponse.json({ error: 'Não encontrada' }, { status: 404 })
     }
@@ -78,7 +81,9 @@ export async function PUT(
         prioridade: data.prioridade ?? tarefa.prioridade,
         categoria: data.categoria !== undefined ? data.categoria : tarefa.categoria,
         checklist: data.checklist !== undefined ? data.checklist : (tarefa.checklist as any),
+        clienteId: data.clienteId !== undefined ? data.clienteId : tarefa.clienteId,
       },
+      include: { clienteRef: { select: { id: true, nome: true } } },
     })
 
     return NextResponse.json(atualizada)
