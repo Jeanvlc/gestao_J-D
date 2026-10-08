@@ -13,11 +13,13 @@ export default function Login() {
   async function entrar(e: React.FormEvent) {
     e.preventDefault()
     setErro('')
-    if (!nome.trim() || !PIN_VALIDO.test(pin)) return setErro('Informe o nome e o PIN de 6 dígitos')
+    // admin pode entrar com o e-mail real; os demais pelo nome
+    const porEmail = nome.includes('@')
+    if (!nome.trim() || !(porEmail ? pin.length >= 6 : PIN_VALIDO.test(pin))) return setErro('Informe o nome e o PIN de 6 dígitos')
     if (!navigator.onLine) return setErro('O primeiro acesso precisa de internet')
     setEnviando(true)
     const sb = createClient()
-    const { data, error } = await sb.auth.signInWithPassword({ email: emailDoNome(nome), password: pin })
+    const { data, error } = await sb.auth.signInWithPassword({ email: porEmail ? nome.trim() : emailDoNome(nome), password: pin })
     if (error || !data.user) { setEnviando(false); return setErro('Nome ou PIN incorreto') }
     const { data: perfil } = await sb.from('va_perfis').select('nome, papel, ativo').eq('user_id', data.user.id).maybeSingle()
     if (!perfil?.ativo) {
@@ -33,13 +35,14 @@ export default function Login() {
     <form onSubmit={entrar} className="mx-auto max-w-sm space-y-4 p-6 pt-16">
       <h1 className="text-2xl font-bold text-green-800">V. A. Ribas</h1>
       <div>
-        <label className="rotulo">Nome</label>
+        <label className="rotulo">Nome (ou e-mail do admin)</label>
         <input className="campo" autoComplete="username" value={nome} onChange={(e) => setNome(e.target.value)} />
       </div>
       <div>
         <label className="rotulo">PIN</label>
-        <input className="campo tracking-widest" type="password" inputMode="numeric" maxLength={6} autoComplete="current-password"
-          value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} />
+        <input className="campo tracking-widest" type="password" inputMode={nome.includes('@') ? 'text' : 'numeric'}
+          maxLength={nome.includes('@') ? undefined : 6} autoComplete="current-password"
+          value={pin} onChange={(e) => setPin(nome.includes('@') ? e.target.value : e.target.value.replace(/\D/g, ''))} />
       </div>
       {erro && <p className="rounded-lg bg-red-100 p-3 text-red-800">{erro}</p>}
       <button className="btn w-full" disabled={enviando}>{enviando ? 'Entrando…' : 'Entrar'}</button>
