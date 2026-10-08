@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { deInputDataHora, paraInputDataHora, parseNum } from '@/lib/format'
+import { deInputDataHora, fmtDataHora, fmtNum, paraInputDataHora, parseNum } from '@/lib/format'
 
 type Campo = { k: string; rotulo: string; tipo?: 'texto' | 'num' | 'datahora' | 'bool' }
 type Linha = Record<string, any>
@@ -61,7 +61,8 @@ function Crud({ titulo, tabela, campos, ordem }: { titulo: string; tabela: strin
     carregar()
   }
 
-  const mostrar = (c: Campo, v: any) => c.tipo === 'bool' ? (v ? 'sim' : 'não') : paraForm(c, v)
+  const mostrar = (c: Campo, v: any) =>
+    c.tipo === 'bool' ? (v ? 'sim' : 'não') : c.tipo === 'datahora' ? (v ? fmtDataHora(v) : '') : c.tipo === 'num' ? fmtNum(Number(v), 2) : v ?? ''
 
   return (
     <section>

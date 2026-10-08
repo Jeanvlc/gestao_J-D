@@ -85,7 +85,6 @@ export function Abastecer({ perfil }: { perfil: Perfil }) {
 
   return (
     <div className="space-y-4 py-2">
-      <Aviso msg={msg} />
       {seletorTanque}
       {maq ? (
         <div className="cartao flex items-center justify-between">
@@ -94,8 +93,8 @@ export function Abastecer({ perfil }: { perfil: Perfil }) {
         </div>
       ) : (
         <div>
-          <label className="rotulo">Máquina</label>
-          <input className="campo" placeholder="Buscar código ou nome" value={busca} onChange={(e) => setBusca(e.target.value)} />
+          <label className="rotulo" htmlFor="busca-maquina">Máquina</label>
+          <input id="busca-maquina" className="campo" placeholder="Buscar código ou nome" value={busca} onChange={(e) => setBusca(e.target.value)} />
           <div className="mt-2 max-h-72 space-y-1 overflow-y-auto">
             {filtradas.map((m) => (
               <button key={m.id} onClick={() => setMaq(m)} className="btn-2 w-full text-left">
@@ -105,30 +104,31 @@ export function Abastecer({ perfil }: { perfil: Perfil }) {
           </div>
         </div>
       )}
-      <div>
-        <label className="rotulo">Litros</label>
+      <label className="block">
+        <span className="rotulo">Litros</span>
         <input className="campo" inputMode="decimal" value={litros} onChange={(e) => setLitros(e.target.value)} />
-      </div>
+      </label>
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="rotulo">Horímetro</label>
+        <label className="block">
+          <span className="rotulo">Horímetro</span>
           <input className="campo" inputMode="decimal" value={horimetro} onChange={(e) => setHorimetro(e.target.value)} />
-        </div>
-        <div>
-          <label className="rotulo">Km</label>
+        </label>
+        <label className="block">
+          <span className="rotulo">Km</span>
           <input className="campo" inputMode="decimal" value={km} onChange={(e) => setKm(e.target.value)} />
-        </div>
+        </label>
       </div>
       {maq && (
         <p className="text-sm text-gray-600">
           Último horímetro: <b>{fmtNum(ultima?.horimetro)}</b> · Último km: <b>{fmtNum(ultima?.km)}</b>
         </p>
       )}
-      <div>
-        <label className="rotulo">Observação</label>
+      <label className="block">
+        <span className="rotulo">Observação</span>
         <input className="campo" value={obs} onChange={(e) => setObs(e.target.value)} />
-      </div>
+      </label>
       {avisos.length > 0 && <div className="rounded-lg bg-amber-100 p-3 text-amber-900">{avisos.map((a) => <p key={a}>{a}</p>)}</div>}
+      <Aviso msg={msg} />
       <button className="btn w-full" onClick={salvar}>{avisos.length ? 'Confirmar mesmo assim' : 'Salvar'}</button>
     </div>
   )
@@ -188,21 +188,21 @@ export function Tanque({ perfil }: { perfil: Perfil }) {
           ) : <div className="text-sm text-gray-600">Nenhuma medição ainda</div>}
         </div>
       ) : <Aviso msg={{ erro: SEM_CADASTRO }} />}
-      <Aviso msg={msg} />
       <div className="flex gap-2">
         <button className={`btn-2 flex-1 ${tipo === 'entrada' ? 'border-green-700 bg-green-50' : ''}`} onClick={() => setTipo('entrada')}>Entrada</button>
         <button className={`btn-2 flex-1 ${tipo === 'medicao' ? 'border-green-700 bg-green-50' : ''}`} onClick={() => setTipo('medicao')}>Medição física</button>
       </div>
-      <div>
-        <label className="rotulo">{tipo === 'entrada' ? 'Litros recebidos' : 'Litros medidos no tanque'}</label>
+      <label className="block">
+        <span className="rotulo">{tipo === 'entrada' ? 'Litros recebidos' : 'Litros medidos no tanque'}</span>
         <input className="campo" inputMode="decimal" value={litros} onChange={(e) => setLitros(e.target.value)} />
-      </div>
+      </label>
       {tipo === 'entrada' && (
-        <div>
-          <label className="rotulo">Nota fiscal</label>
+        <label className="block">
+          <span className="rotulo">Nota fiscal</span>
           <input className="campo" inputMode="numeric" value={nf} onChange={(e) => setNf(e.target.value)} />
-        </div>
+        </label>
       )}
+      <Aviso msg={msg} />
       <button className="btn w-full" onClick={salvar}>Salvar</button>
     </div>
   )

@@ -63,6 +63,12 @@ const estado = async (e: Partial<EstadoSync>) => {
   await db.meta.put({ chave: 'sync', valor: { ...atual, ...e } })
 }
 
+// falha de rede vira texto para o motorista; erro do servidor (ex.: sessão expirada) aparece como veio
+const mensagemErro = (e: unknown) =>
+  e instanceof Error && /fetch|network|timeout|abort/i.test(`${e.name} ${e.message}`)
+    ? 'Sem conexão. Vai tentar de novo sozinho.'
+    : e instanceof Error ? e.message : String(e)
+
 export const sincronizando = () => rodando !== null
 
 /** Envia e baixa. Chamado ao abrir o app, no evento `online`, ao voltar para o app e no botão. */
@@ -82,7 +88,7 @@ export function sincronizar(sb: Cliente): Promise<void> {
       await estado({ enviando: false, erro: null, ultimo: Date.now() })
     } catch (e) {
       tentativas++
-      await estado({ enviando: false, erro: e instanceof Error ? e.message : String(e) })
+      await estado({ enviando: false, erro: mensagemErro(e) })
       // tentativa automática: 5 s, 10 s, 20 s… até 5 min
       timer = setTimeout(() => sincronizar(sb), Math.min(300_000, 5000 * 2 ** (tentativas - 1)))
     }

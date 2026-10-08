@@ -34,16 +34,16 @@ export default function Login() {
   return (
     <form onSubmit={entrar} className="mx-auto max-w-sm space-y-4 p-6 pt-16">
       <h1 className="text-2xl font-bold text-green-800">V. A. Ribas</h1>
-      <div>
-        <label className="rotulo">Nome (ou e-mail do admin)</label>
+      <label className="block">
+        <span className="rotulo">Nome (ou e-mail do admin)</span>
         <input className="campo" autoComplete="username" value={nome} onChange={(e) => setNome(e.target.value)} />
-      </div>
-      <div>
-        <label className="rotulo">PIN</label>
+      </label>
+      <label className="block">
+        <span className="rotulo">PIN</span>
         <input className="campo tracking-widest" type="password" inputMode={nome.includes('@') ? 'text' : 'numeric'}
           maxLength={nome.includes('@') ? undefined : 6} autoComplete="current-password"
           value={pin} onChange={(e) => setPin(nome.includes('@') ? e.target.value : e.target.value.replace(/\D/g, ''))} />
-      </div>
+      </label>
       {erro && <p className="rounded-lg bg-red-100 p-3 text-red-800">{erro}</p>}
       <button className="btn w-full" disabled={enviando}>{enviando ? 'Entrando…' : 'Entrar'}</button>
     </form>

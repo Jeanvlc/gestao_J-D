@@ -2,10 +2,11 @@ import { createClient } from '@/lib/supabase/client'
 
 /** Lê a tabela inteira em páginas de 1000 (limite padrão do Supabase por requisição). */
 export async function todos<T = any>(tabela: string, colunas = '*'): Promise<T[]> {
+  const chave = tabela === 'va_perfis' ? 'user_id' : 'id'
   const sb = createClient()
   const out: T[] = []
   for (let i = 0; ; i += 1000) {
-    const { data, error } = await sb.from(tabela).select(colunas).order('id').range(i, i + 999)
+    const { data, error } = await sb.from(tabela).select(colunas).order(chave).range(i, i + 999)
     if (error) throw new Error(error.message)
     out.push(...(data as T[]))
     if (data.length < 1000) return out
