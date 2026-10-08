@@ -22,8 +22,9 @@ export type Registro = {
   enviado_em?: number
 }
 
-export type Maquina = { id: string; codigo: string; nome: string; tipo: string | null }
-export type Tanque = { id: string; nome: string }
+export type Maquina = { id: string; codigo: string; nome: string; centro_custo_id: string | null }
+/** centros: centros de custo que o comboio atende (vazio = todas as máquinas) */
+export type Tanque = { id: string; nome: string; centros: string[] }
 export type Leitura = { maquina_id: string; horimetro: number | null; km: number | null }
 export type Saldo = {
   tanque_id: string; saldo: number

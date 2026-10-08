@@ -35,8 +35,8 @@ export async function enviarPendentes(sb: Cliente): Promise<number> {
 export async function baixarCadastros(sb: Cliente) {
   const inicio = Date.now() // registros enviados depois disto ainda não estão nos saldos baixados
   const [maq, tq, leit, sal] = await Promise.all([
-    sb.from('va_maquinas').select('id,codigo,nome,tipo').eq('ativo', true),
-    sb.from('va_tanques').select('id,nome').eq('ativo', true),
+    sb.from('va_maquinas').select('id,codigo,nome,centro_custo_id').eq('ativo', true),
+    sb.from('va_tanques').select('id,nome,va_tanque_centros(centro_custo_id)').eq('ativo', true),
     sb.rpc('va_ultimas_leituras'),
     sb.rpc('va_saldos'),
   ])
@@ -45,7 +45,10 @@ export async function baixarCadastros(sb: Cliente) {
 
   await db.transaction('rw', [db.maquinas, db.tanques, db.leituras, db.saldos, db.meta, db.registros], async () => {
     await db.maquinas.clear(); await db.maquinas.bulkPut(maq.data)
-    await db.tanques.clear(); await db.tanques.bulkPut(tq.data)
+    await db.tanques.clear()
+    await db.tanques.bulkPut(tq.data.map((t: any) => ({
+      id: t.id, nome: t.nome, centros: (t.va_tanque_centros ?? []).map((v: any) => v.centro_custo_id),
+    })))
     await db.leituras.clear(); await db.leituras.bulkPut(leit.data)
     await db.saldos.clear(); await db.saldos.bulkPut(sal.data)
     await db.meta.put({ chave: 'baixado_em', valor: inicio })

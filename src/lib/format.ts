@@ -42,3 +42,8 @@ export const fimDiaSP = (dia: string) => `${dia}T23:59:59.999${OFFSET}`
 /** <input type="datetime-local"> ↔ timestamptz */
 export const paraInputDataHora = (iso: string) => isoSP(iso).replace(' ', 'T')
 export const deInputDataHora = (v: string) => new Date(`${v}:00${OFFSET}`).toISOString()
+
+/** Máscara de litros com vírgula fixa: digitar 12050 mostra "120,50". Guarda só os dígitos. */
+export const digitosLitros = (texto: string) => texto.replace(/\D/g, '').replace(/^0+/, '').slice(0, 7)
+export const litrosDeDigitos = (d: string) => (d ? Number(d) / 100 : null)
+export const mostrarLitros = (d: string) => (d ? fmtNum(Number(d) / 100, 2) : '')

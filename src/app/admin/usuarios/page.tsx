@@ -40,21 +40,22 @@ export default function Usuarios() {
   return (
     <div className="space-y-6">
       <section className="cartao flex flex-wrap items-end gap-3">
-        <label className="text-sm">Nome<br /><input className="campo py-2 text-base" value={nome} onChange={(e) => setNome(e.target.value)} /></label>
-        <label className="text-sm">PIN (6 dígitos)<br /><input className="campo py-2 text-base" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} /></label>
-        <label className="text-sm">Perfil<br />
+        <h2 className="w-full font-display text-2xl font-bold text-mata-escuro">Usuários</h2>
+        <label className="font-semibold text-tinta/75">Nome<br /><input className="campo py-2 text-base" value={nome} onChange={(e) => setNome(e.target.value)} /></label>
+        <label className="font-semibold text-tinta/75">PIN (6 dígitos)<br /><input className="campo py-2 text-base" inputMode="numeric" maxLength={6} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} /></label>
+        <label className="font-semibold text-tinta/75">Perfil<br />
           <select className="campo py-2 text-base" value={papel} onChange={(e) => setPapel(e.target.value)}>
             {PAPEIS.map((p) => <option key={p}>{p}</option>)}
           </select>
         </label>
-        <button className="btn py-2" onClick={criar}>Criar usuário</button>
+        <button className="btn-mata" onClick={criar}>Criar usuário</button>
       </section>
-      {msg && <p className={`rounded p-2 ${msg.startsWith('Erro') ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>{msg}</p>}
-      <table className="tabela">
+      {msg && <p className={`rounded p-2 ${msg.startsWith('Erro') ? 'bg-alerta-claro text-alerta' : 'bg-mata-claro text-mata'}`}>{msg}</p>}
+      <section className="cartao overflow-x-auto"><table className="tabela">
         <thead><tr><th>Nome</th><th>Perfil</th><th>Ativo</th><th /></tr></thead>
         <tbody>
           {perfis.map((p) => (
-            <tr key={p.user_id} className={p.ativo ? '' : 'text-gray-400'}>
+            <tr key={p.user_id} className={p.ativo ? '' : 'text-tinta/40'}>
               <td>{p.nome}</td>
               <td>
                 <select value={p.papel} onChange={(e) => rodar(() => api('PATCH', { user_id: p.user_id, papel: e.target.value }), 'Perfil alterado')}>
@@ -62,12 +63,12 @@ export default function Usuarios() {
                 </select>
               </td>
               <td><input type="checkbox" checked={p.ativo} onChange={(e) => rodar(() => api('PATCH', { user_id: p.user_id, ativo: e.target.checked }), 'Alterado')} /></td>
-              <td><button className="underline" onClick={() => trocarPin(p)}>Trocar PIN</button></td>
+              <td><button className="font-semibold text-mata underline" onClick={() => trocarPin(p)}>Trocar PIN</button></td>
             </tr>
           ))}
         </tbody>
-      </table>
-      <p className="text-xs text-gray-500">O usuário entra com o nome exatamente como cadastrado (maiúsculas e acentos não importam). Usuário desativado não consegue entrar nem enviar.</p>
+      </table></section>
+      <p className="text-sm text-tinta/55">O usuário entra com o nome exatamente como cadastrado (maiúsculas e acentos não importam). Usuário desativado não consegue entrar nem enviar.</p>
     </div>
   )
 }

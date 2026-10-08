@@ -74,3 +74,11 @@ export function ultimaLeitura(servidor: number | null | undefined, locais: (numb
   const xs = [servidor, ...locais].filter((x): x is number => x != null).map(Number)
   return xs.length ? Math.max(...xs) : null
 }
+
+/**
+ * Comboio só abastece máquinas dos centros de custo dele. Sem centro vinculado, atende todas.
+ * `centros` pode vir undefined no cache de aparelhos que ainda não baixaram depois da versão 1.1.0.
+ */
+export function maquinasDoTanque<M extends { centro_custo_id: string | null }>(maquinas: M[], centros: string[] | undefined): M[] {
+  return centros?.length ? maquinas.filter((m) => m.centro_custo_id != null && centros.includes(m.centro_custo_id)) : maquinas
+}

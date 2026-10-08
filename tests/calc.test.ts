@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { diferencaMedicao, kmPorLitro, litrosPorHora, saldo, ultimaLeitura, validarLeitura, validarLitros } from '../src/lib/calc'
-import { parseNum, diaSP } from '../src/lib/format'
+import { diferencaMedicao, kmPorLitro, litrosPorHora, maquinasDoTanque, saldo, ultimaLeitura, validarLeitura, validarLitros } from '../src/lib/calc'
+import { parseNum, diaSP, digitosLitros, litrosDeDigitos, mostrarLitros } from '../src/lib/format'
 
 const t = (h: number) => new Date(Date.UTC(2026, 9, 1, h)).toISOString()
 
@@ -78,5 +78,29 @@ describe('formato BR', () => {
   })
   it('dia em SP (02:00 UTC ainda é o dia anterior)', () => {
     expect(diaSP('2026-10-02T02:00:00Z')).toBe('2026-10-01')
+  })
+})
+
+describe('centro de custo', () => {
+  const ms = [{ id: 'a', centro_custo_id: 'c1' }, { id: 'b', centro_custo_id: 'c2' }, { id: 'c', centro_custo_id: null }]
+  it('comboio vê só máquinas dos seus centros', () => {
+    expect(maquinasDoTanque(ms, ['c1']).map((m) => m.id)).toEqual(['a'])
+    expect(maquinasDoTanque(ms, ['c1', 'c2']).map((m) => m.id)).toEqual(['a', 'b'])
+  })
+  it('comboio sem centro vinculado vê todas', () => {
+    expect(maquinasDoTanque(ms, [])).toHaveLength(3)
+    expect(maquinasDoTanque(ms, undefined)).toHaveLength(3) // cache antigo, antes de baixar de novo
+  })
+})
+
+describe('máscara de litros', () => {
+  it('vírgula automática', () => {
+    expect(mostrarLitros(digitosLitros('12050'))).toBe('120,50')
+    expect(mostrarLitros(digitosLitros('5'))).toBe('0,05')
+    expect(mostrarLitros(digitosLitros('1234567'))).toBe('12.345,67')
+  })
+  it('apagar remove o último dígito', () => {
+    expect(digitosLitros('120,5')).toBe('1205')
+    expect(litrosDeDigitos(digitosLitros('0,0'))).toBeNull()
   })
 })

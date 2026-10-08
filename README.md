@@ -14,7 +14,8 @@ Next.js 14 + Supabase + IndexedDB (Dexie). Deploy na Vercel.
 
 ## 1. Banco (Supabase)
 
-O banco já recebeu a migration. Para outro projeto: SQL Editor → colar `supabase/migration.sql` → Run.
+O banco já recebeu as migrations. Para outro projeto, rode no SQL Editor, nesta ordem:
+`supabase/migration.sql` e depois `supabase/migration_002_centros_custo.sql`.
 
 Em **Authentication → Sign In / Providers**:
 - desligue **Allow new users to sign up** (os usuários são criados pelo painel);
@@ -51,11 +52,14 @@ Em **Authentication → Sign In / Providers**:
 
 ## 4. Primeiro uso
 
-1. Painel → **Máquinas e tanques**: ajuste o tanque "Comboio" (saldo inicial e data) e cadastre as máquinas.
-2. No celular, abra o endereço da Vercel, faça login e instale o app:
+1. Painel → **Centros de custo**: cadastre os centros e marque quais cada comboio atende.
+   Comboio sem nenhum centro marcado vê todas as máquinas.
+2. Painel → **Máquinas e comboios**: ajuste o "Comboio" (saldo inicial e data) e cadastre as máquinas
+   (prefixo, nome e centro de custo).
+3. No celular, abra o endereço da Vercel, faça login e instale o app:
    - Android/Chrome: menu ⋮ → **Instalar app**
    - iPhone/Safari: Compartilhar → **Adicionar à Tela de Início**
-3. Com internet, toque em **Enviar agora** uma vez para baixar os cadastros.
+4. Com internet, toque em **Enviar** uma vez para baixar os cadastros.
 
 ## Backup
 

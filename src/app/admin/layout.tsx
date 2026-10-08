@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { MenuAdmin } from './menu'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const sb = await createClient()
@@ -10,15 +11,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (perfil?.papel !== 'admin' || !perfil.ativo) redirect('/')
 
   return (
-    <div className="mx-auto max-w-6xl p-4">
-      <nav className="mb-4 flex flex-wrap gap-4 border-b pb-3 font-medium">
-        <span className="font-bold text-green-800">V. A. Ribas</span>
-        <a href="/admin" className="underline">Painel</a>
-        <a href="/admin/maquinas" className="underline">Máquinas e tanques</a>
-        <a href="/admin/usuarios" className="underline">Usuários</a>
-        <a href="/" className="underline">App do campo</a>
-      </nav>
-      {children}
+    <div className="min-h-screen">
+      <header className="bg-mata text-white">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
+          <span className="font-display text-xl font-bold">V. A. Ribas</span>
+          <MenuAdmin />
+        </div>
+      </header>
+      <main className="mx-auto max-w-6xl p-4">{children}</main>
     </div>
   )
 }
