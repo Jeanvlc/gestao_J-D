@@ -1,79 +1,48 @@
-// src/app/login/page.tsx
 'use client'
-
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { gravarPerfil } from '@/lib/db'
+import { emailDoNome, PIN_VALIDO } from '@/lib/usuario'
 
-export default function LoginPage() {
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [senha, setSenha] = useState('')
+export default function Login() {
+  const [nome, setNome] = useState('')
+  const [pin, setPin] = useState('')
   const [erro, setErro] = useState('')
-  const [carregando, setCarregando] = useState(false)
+  const [enviando, setEnviando] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function entrar(e: React.FormEvent) {
     e.preventDefault()
     setErro('')
-    setCarregando(true)
-
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
-
-    if (error) {
-      setErro('E-mail ou senha inválidos.')
-      setCarregando(false)
-      return
+    if (!nome.trim() || !PIN_VALIDO.test(pin)) return setErro('Informe o nome e o PIN de 6 dígitos')
+    if (!navigator.onLine) return setErro('O primeiro acesso precisa de internet')
+    setEnviando(true)
+    const sb = createClient()
+    const { data, error } = await sb.auth.signInWithPassword({ email: emailDoNome(nome), password: pin })
+    if (error || !data.user) { setEnviando(false); return setErro('Nome ou PIN incorreto') }
+    const { data: perfil } = await sb.from('va_perfis').select('nome, papel, ativo').eq('user_id', data.user.id).maybeSingle()
+    if (!perfil?.ativo) {
+      await sb.auth.signOut()
+      setEnviando(false)
+      return setErro('Usuário sem acesso. Fale com o administrador.')
     }
-
-    await fetch('/api/auth/perfil', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    })
-
-    router.push('/dashboard')
-    router.refresh()
+    gravarPerfil({ id: data.user.id, nome: perfil.nome, papel: perfil.papel })
+    location.href = perfil.papel === 'admin' ? '/admin' : '/'
   }
 
   return (
-    <div style={{ maxWidth: 360, margin: '80px auto', fontFamily: 'sans-serif' }}>
-      <h1 style={{ color: '#15803d' }}>MacContab</h1>
-      <p style={{ color: '#64748b', marginBottom: 24 }}>Entrar</p>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: 12 }}>
-          <label>E-mail</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ display: 'block', width: '100%', padding: 8 }}
-          />
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <label>Senha</label>
-          <input
-            type="password"
-            value={senha}
-            onChange={(e) => setSenha(e.target.value)}
-            required
-            style={{ display: 'block', width: '100%', padding: 8 }}
-          />
-        </div>
-        {erro && <p style={{ color: 'red' }}>{erro}</p>}
-        <button
-          type="submit"
-          disabled={carregando}
-          style={{ padding: 8, width: '100%', background: '#16a34a', color: 'white', border: 'none', borderRadius: 6, fontWeight: 600, cursor: 'pointer' }}
-        >
-          {carregando ? 'Entrando...' : 'Entrar'}
-        </button>
-      </form>
-      <p style={{ marginTop: 12 }}>
-        Não tem conta? <Link href="/cadastro">Cadastre-se</Link>
-      </p>
-    </div>
+    <form onSubmit={entrar} className="mx-auto max-w-sm space-y-4 p-6 pt-16">
+      <h1 className="text-2xl font-bold text-green-800">V. A. Ribas</h1>
+      <div>
+        <label className="rotulo">Nome</label>
+        <input className="campo" autoComplete="username" value={nome} onChange={(e) => setNome(e.target.value)} />
+      </div>
+      <div>
+        <label className="rotulo">PIN</label>
+        <input className="campo tracking-widest" type="password" inputMode="numeric" maxLength={6} autoComplete="current-password"
+          value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} />
+      </div>
+      {erro && <p className="rounded-lg bg-red-100 p-3 text-red-800">{erro}</p>}
+      <button className="btn w-full" disabled={enviando}>{enviando ? 'Entrando…' : 'Entrar'}</button>
+    </form>
   )
 }

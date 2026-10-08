@@ -1,163 +1,93 @@
-# MacContab - Sistema de Gestão Contábil
+# V. A. Ribas — App de campo
 
-Sistema completo para gerenciar obrigações, processos e tarefas do seu escritório contábil.
+PWA para celular, feito para funcionar **sem internet**. Fase 1: abastecimento do comboio de diesel.
+Next.js 14 + Supabase + IndexedDB (Dexie). Deploy na Vercel.
 
-## 🎯 Features
+## Como funciona o offline
 
-✅ Dashboard com estatísticas em tempo real  
-✅ Gestão de obrigações com vencimentos  
-✅ Controle de processos com etapas  
-✅ Filtros por status, prioridade e tags  
-✅ Interface escura e moderna  
-✅ Deploy gratuito (Vercel + Supabase)  
+- Todo lançamento é gravado primeiro no aparelho (IndexedDB) com um id (UUID) gerado no celular.
+- O envio acontece ao abrir o app, quando a conexão volta, quando o app volta do segundo plano e no botão **Enviar agora**.
+  Se falhar, o app tenta de novo sozinho (5 s, 10 s, 20 s… até 5 min). Não usa Background Sync.
+- O envio é `INSERT … ON CONFLICT (id) DO NOTHING`: reenviar nunca duplica, e só sai da fila o que o servidor confirmou.
+- Máquinas, tanques, últimas leituras e saldos são baixados e ficam guardados no aparelho.
+- **O primeiro login de cada aparelho precisa de internet.** Depois disso o app abre sem sinal.
 
-## 📋 Pré-requisitos
+## 1. Banco (Supabase)
 
-- Node.js 18+
-- npm ou yarn
-- Git
-- Conta GitHub
-- Conta Supabase (gratuita)
-- Conta Vercel (gratuita)
+O banco já recebeu a migration. Para outro projeto: SQL Editor → colar `supabase/migration.sql` → Run.
 
-## 🚀 Começar em 10 minutos
+Em **Authentication → Sign In / Providers**:
+- desligue **Allow new users to sign up** (os usuários são criados pelo painel);
+- deixe **Leaked password protection** desligado: PINs de 6 dígitos seriam recusados.
 
-### 1️⃣ Configurar Supabase
-Siga **EXATAMENTE** o arquivo: `GUIA_SUPABASE_PASSO_A_PASSO.md`
+## 2. Primeiro usuário admin
 
-Este guia tem screenshots e instruções passo a passo para:
-- Criar conta Supabase
-- Gerar banco de dados PostgreSQL
-- Obter CONNECTION STRING
-- Configurar variáveis de ambiente
-- Fazer deploy no Vercel
+1. Supabase → **Authentication → Users → Add user → Create new user**
+   - e-mail: o nome em minúsculas, sem acento, com pontos no lugar dos espaços, + `@va-ribas.local`
+     (ex.: "Jean Victor" → `jean.victor@va-ribas.local`)
+   - senha: o PIN de 6 dígitos
+   - marque **Auto Confirm User**
+2. SQL Editor:
+   ```sql
+   insert into va_perfis (user_id, nome, papel)
+   select id, 'Jean Victor', 'admin' from auth.users where email = 'jean.victor@va-ribas.local';
+   ```
+3. Entre no app com nome **Jean Victor** e o PIN. Os demais usuários são criados em **Painel → Usuários**.
 
-### 2️⃣ Instalar dependências localmente
+## 3. Vercel
+
+1. Envie o repositório para o GitHub → vercel.com → **Add New → Project** → importe o repositório (Next.js é detectado sozinho).
+2. **Settings → Environment Variables**:
+
+   | Variável | Onde pegar |
+   |---|---|
+   | `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → API |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys (publishable) |
+   | `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys (secret). **Nunca expor.** |
+   | `CRON_SECRET` | qualquer texto aleatório longo (ex.: `openssl rand -hex 24`) |
+
+3. Deploy. O cron diário (`vercel.json`, 11:00 UTC) chama `/api/cron/keepalive` e faz uma consulta leve,
+   para o plano gratuito do Supabase não pausar por inatividade.
+
+## 4. Primeiro uso
+
+1. Painel → **Máquinas e tanques**: ajuste o tanque "Comboio" (saldo inicial e data) e cadastre as máquinas.
+2. No celular, abra o endereço da Vercel, faça login e instale o app:
+   - Android/Chrome: menu ⋮ → **Instalar app**
+   - iPhone/Safari: Compartilhar → **Adicionar à Tela de Início**
+3. Com internet, toque em **Enviar agora** uma vez para baixar os cadastros.
+
+## Backup
+
+O plano gratuito não tem backup automático: use **Painel → Backup completo** (todas as tabelas em um .xlsx) com frequência.
+
+## Desenvolvimento
+
 ```bash
 npm install
+npm run dev      # http://localhost:3000 (service worker só funciona em `npm run build && npm start`)
+npm test         # cálculo de saldo, L/h, km/L, validações e sincronização idempotente
 ```
 
-### 3️⃣ Criar tabelas
-```bash
-npx prisma migrate dev --name init
-```
+Variáveis locais em `.env` (mesmos nomes da tabela acima).
 
-### 4️⃣ Rodar localmente
-```bash
-npm run dev
-```
+## Fase 2 (produção dos operadores)
 
-Abra: http://localhost:3000/dashboard
+A fila e o envio são genéricos por tabela (`src/lib/db.ts` → `Tabela`). Para a Fase 2: criar `va_producoes`
+com o mesmo padrão (id UUID do celular, RLS de insert/select próprio), acrescentar o nome em `Tabela`
+e uma aba nova em `src/app/page.tsx`.
 
-### 5️⃣ Deploy no Vercel
-1. Faça push para GitHub
-2. Acesse vercel.com/new
-3. Importe seu repositório
-4. Adicione variáveis de ambiente
-5. Deploy!
-
-## 📁 Estrutura do Projeto
+## Estrutura
 
 ```
-src/
-├── app/
-│   ├── api/
-│   │   ├── obrigacoes/        # API REST de obrigações
-│   │   └── processos/         # API REST de processos
-│   ├── dashboard/             # Página principal
-│   └── layout.tsx
-├── lib/
-│   └── db.ts                  # Conexão Prisma
-└── components/                # Componentes React
-
-prisma/
-└── schema.prisma              # Schema do banco de dados
+supabase/migration.sql      tabelas, funções, RLS
+public/sw.js                service worker (cache do app)
+src/lib/db.ts               banco local (fila + cadastros)
+src/lib/sync.ts             envio/baixa, tentativas automáticas
+src/lib/calc.ts             saldo, L/h, km/L, validações
+src/lib/format.ts           datas e números pt-BR, fuso de SP
+src/app/page.tsx, telas.tsx app do campo (Abastecer, Tanque, Histórico)
+src/app/admin/              painel (saldos, consumo, lista, Excel, cadastros, usuários)
+src/app/api/                criação de usuários (chave secreta) e cron
+tests/                      vitest
 ```
-
-## 🔌 API Endpoints
-
-### Obrigações
-- `GET /api/obrigacoes` - Listar todas
-- `POST /api/obrigacoes` - Criar nova
-- `PUT /api/obrigacoes` - Atualizar
-- `DELETE /api/obrigacoes` - Deletar
-
-### Processos
-- `GET /api/processos` - Listar todos
-- `POST /api/processos` - Criar novo
-- `PUT /api/processos` - Atualizar
-- `DELETE /api/processos` - Deletar
-
-## 🛠️ Comandos úteis
-
-```bash
-# Desenvolvimento
-npm run dev
-
-# Build para produção
-npm run build
-
-# Iniciar em produção
-npm start
-
-# Abrir interface do banco de dados
-npm run prisma:studio
-
-# Rodar migrations
-npm run prisma:migrate
-
-# Sincronizar schema com banco
-npm run prisma:push
-```
-
-## 📊 Banco de dados
-
-Tabelas principais:
-- `User` - Usuários do sistema
-- `Obrigacao` - Obrigações fiscais e administrativas
-- `Processo` - Processos contábeis com etapas
-- `Etapa` - Etapas dentro de cada processo
-- `Tarefa` - Tarefas rápidas
-
-## 🔐 Autenticação
-
-Atualmente, o sistema usa `x-user-id` no header das requisições.
-
-Para implementar autenticação real, recomendo:
-- NextAuth.js
-- Supabase Auth
-- Firebase Auth
-
-## 🎨 Customização
-
-### Cores
-Altere em `tailwind.config.ts`
-
-### Fonts
-Altere em `src/app/layout.tsx`
-
-### Componentes
-Edite em `src/components/`
-
-## 🆘 Troubleshooting
-
-### Erro: "Cannot reach database"
-Verifique sua `DATABASE_URL` em `.env.local`
-
-### Erro: "Column does not exist"
-Rode: `npx prisma migrate dev`
-
-### Vercel build failed
-Verifique se `DATABASE_URL` está nas Environment Variables do Vercel
-
-## 📞 Suporte
-
-Qualquer dúvida, me chame que ajudo!
-
-## 📄 Licença
-
-MIT - Livre para usar e modificar
-
----
-
-**Importante**: Leia o `GUIA_SUPABASE_PASSO_A_PASSO.md` antes de começar!

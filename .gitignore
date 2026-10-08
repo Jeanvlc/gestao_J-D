@@ -47,3 +47,5 @@ Thumbs.db
 prisma/migrations/dev_db
 *.tsbuildinfo
 .env.local.txt
+
+graphify-out/
