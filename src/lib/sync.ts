@@ -34,16 +34,20 @@ export async function enviarPendentes(sb: Cliente): Promise<number> {
 /** Baixa cadastros, últimas leituras e saldos para funcionar sem sinal. */
 export async function baixarCadastros(sb: Cliente) {
   const inicio = Date.now() // registros enviados depois disto ainda não estão nos saldos baixados
-  const [maq, tq, leit, sal] = await Promise.all([
+  const [maq, tq, leit, sal, meu, serv, loc, mot] = await Promise.all([
     sb.from('va_maquinas').select('id,codigo,nome,centro_custo_id').eq('ativo', true),
     sb.from('va_tanques').select('id,nome,va_tanque_centros(centro_custo_id)').eq('ativo', true),
     sb.rpc('va_ultimas_leituras'),
     sb.rpc('va_saldos'),
+    sb.rpc('va_meu_tanque'),
+    sb.from('va_servicos').select('id,nome').eq('ativo', true),
+    sb.from('va_locais').select('id,nome').eq('ativo', true),
+    sb.from('va_motivos_parada').select('id,nome').eq('ativo', true),
   ])
-  const erro = maq.error ?? tq.error ?? leit.error ?? sal.error
+  const erro = maq.error ?? tq.error ?? leit.error ?? sal.error ?? meu.error ?? serv.error ?? loc.error ?? mot.error
   if (erro) throw new Error(erro.message)
 
-  await db.transaction('rw', [db.maquinas, db.tanques, db.leituras, db.saldos, db.meta, db.registros], async () => {
+  await db.transaction('rw', [db.maquinas, db.tanques, db.leituras, db.saldos, db.meta, db.registros, db.servicos, db.locais, db.motivos], async () => {
     await db.maquinas.clear(); await db.maquinas.bulkPut(maq.data)
     await db.tanques.clear()
     await db.tanques.bulkPut(tq.data.map((t: any) => ({
@@ -51,7 +55,11 @@ export async function baixarCadastros(sb: Cliente) {
     })))
     await db.leituras.clear(); await db.leituras.bulkPut(leit.data)
     await db.saldos.clear(); await db.saldos.bulkPut(sal.data)
+    await db.servicos.clear(); await db.servicos.bulkPut(serv.data)
+    await db.locais.clear(); await db.locais.bulkPut(loc.data)
+    await db.motivos.clear(); await db.motivos.bulkPut(mot.data)
     await db.meta.put({ chave: 'baixado_em', valor: inicio })
+    await db.meta.put({ chave: 'meu_tanque', valor: meu.data ?? null })
     // histórico local: guarda enviados por 7 dias
     await db.registros.where('status').equals('enviado').filter((r) => (r.enviado_em ?? 0) < inicio - SETE_DIAS).delete()
   })

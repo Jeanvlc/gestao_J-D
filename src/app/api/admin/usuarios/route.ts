@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   if (!(await souAdmin())) return falha('Sem permissão', 403)
-  const { user_id, pin, papel, ativo } = await req.json()
+  const { user_id, pin, papel, ativo, tanque_id } = await req.json()
   if (typeof user_id !== 'string') return falha('Dados inválidos')
   const a = admin()
   if (pin !== undefined) {
@@ -45,6 +45,7 @@ export async function PATCH(req: Request) {
   const mudancas: Record<string, unknown> = {}
   if (papel !== undefined) { if (!PAPEIS.includes(papel)) return falha('Perfil inválido'); mudancas.papel = papel }
   if (ativo !== undefined) mudancas.ativo = !!ativo
+  if (tanque_id !== undefined) mudancas.tanque_id = tanque_id || null
   if (Object.keys(mudancas).length) {
     const { error } = await a.from('va_perfis').update(mudancas).eq('user_id', user_id)
     if (error) return falha(error.message)

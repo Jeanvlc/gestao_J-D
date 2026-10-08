@@ -6,13 +6,22 @@ import { db, gravarPerfil, lerPerfil, type EstadoSync, type Perfil } from '@/lib
 import { sincronizar } from '@/lib/sync'
 import { fmtHora } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
-import { Abastecer, Historico, Tanque, sb } from './telas'
-import { IconeBomba, IconeLista, IconeTanque } from './icones'
+import { Abastecer, Historico, Parar, Produzir, Tanque, sb } from './telas'
+import { IconeBomba, IconeLista, IconeParada, IconePlanta, IconeTanque } from './icones'
 
 const ABAS = {
   abastecer: { rotulo: 'Abastecer', Icone: IconeBomba },
   tanque: { rotulo: 'Tanque', Icone: IconeTanque },
+  produzir: { rotulo: 'Produção', Icone: IconePlanta },
+  parar: { rotulo: 'Parada', Icone: IconeParada },
   historico: { rotulo: 'Hoje', Icone: IconeLista },
+} as const
+
+// cada perfil vê só as abas do seu trabalho; o admin vê tudo
+const ABAS_DO_PERFIL = {
+  motorista: ['abastecer', 'tanque', 'historico'],
+  operador: ['produzir', 'parar', 'historico'],
+  admin: ['abastecer', 'tanque', 'produzir', 'parar', 'historico'],
 } as const
 
 export default function Campo() {
@@ -23,6 +32,7 @@ export default function Campo() {
     const p = lerPerfil()
     if (!p) { location.href = '/login'; return }
     setPerfil(p)
+    setAba(ABAS_DO_PERFIL[p.papel][0])
     const sync = () => sincronizar(sb())
     const aoVoltar = () => document.visibilityState === 'visible' && sync()
     sync()
@@ -61,10 +71,12 @@ export default function Campo() {
       <main className="px-4 pt-5">
         {aba === 'abastecer' && <Abastecer perfil={perfil} />}
         {aba === 'tanque' && <Tanque perfil={perfil} />}
+        {aba === 'produzir' && <Produzir perfil={perfil} />}
+        {aba === 'parar' && <Parar perfil={perfil} />}
         {aba === 'historico' && <Historico perfil={perfil} />}
       </main>
       <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-lg border-t border-tinta/10 bg-white pb-[env(safe-area-inset-bottom)]">
-        {Object.entries(ABAS).map(([k, { rotulo, Icone }]) => (
+        {ABAS_DO_PERFIL[perfil.papel].map((k) => ({ k, ...ABAS[k] })).map(({ k, rotulo, Icone }) => (
           <button key={k} onClick={() => setAba(k as keyof typeof ABAS)} aria-current={aba === k ? 'page' : undefined}
             className={`flex flex-1 flex-col items-center gap-0.5 pb-2.5 pt-3 text-[15px] font-semibold ${aba === k ? 'text-mata' : 'text-tinta/45'}`}>
             <span className={`rounded-full px-5 py-1 ${aba === k ? 'bg-mata-claro' : ''}`}><Icone /></span>
@@ -78,6 +90,9 @@ export default function Campo() {
 
 function Faixa() {
   const pendentes = useLiveQuery(() => db.registros.where('status').equals('pendente').count(), [], 0)
+  // lançamento esperando há mais de 3 h: lembra o motorista de achar sinal
+  const maisAntigo = useLiveQuery(async () => (await db.registros.where('status').equals('pendente').toArray()).reduce((m, r) => Math.min(m, Date.parse(r.data_hora)), Infinity), [], Infinity)
+  const horasParado = Number.isFinite(maisAntigo) ? Math.floor((Date.now() - maisAntigo) / 3600e3) : 0
   const s: EstadoSync | undefined = useLiveQuery(() => db.meta.get('sync'), [])?.valor
   const detalhe = s?.enviando ? 'Enviando…' : s?.erro ? s.erro : s?.ultimo ? `Último envio às ${fmtHora(s.ultimo)}` : ''
   return (
@@ -87,7 +102,9 @@ function Faixa() {
         <div className="font-semibold">
           {pendentes ? `${pendentes} ${pendentes > 1 ? 'lançamentos aguardando' : 'lançamento aguardando'} envio` : 'Tudo enviado'}
         </div>
-        {detalhe && <div className="truncate text-[13px] text-tinta/65">{detalhe}</div>}
+        {horasParado >= 3
+          ? <div className="text-[13px] font-semibold text-alerta">Parado há {horasParado} h. Vá até um local com sinal e toque em Enviar.</div>
+          : detalhe && <div className="truncate text-[13px] text-tinta/65">{detalhe}</div>}
       </div>
       <button className="rounded-lg border-2 border-tinta/15 bg-white px-3 py-1.5 text-[15px] font-semibold disabled:opacity-50"
         disabled={s?.enviando} onClick={() => sincronizar(sb())}>Enviar</button>

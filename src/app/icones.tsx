@@ -19,3 +19,9 @@ export const IconeFechar = () => (
 export const IconeSeta = () => (
   <svg {...base} width={22} height={22}><path d="m6 9 6 6 6-6" /></svg>
 )
+export const IconePlanta = () => (
+  <svg {...base}><path d="M12 21v-9" /><path d="M12 12c0-4 3-6 7-6 0 4-3 6-7 6Z" /><path d="M12 15c0-3-2.5-5-6-5 0 3 2.5 5 6 5Z" /></svg>
+)
+export const IconeParada = () => (
+  <svg {...base}><circle cx="12" cy="12" r="9" /><path d="M9.5 9v6M14.5 9v6" /></svg>
+)

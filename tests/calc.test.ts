@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { diferencaMedicao, kmPorLitro, litrosPorHora, maquinasDoTanque, saldo, ultimaLeitura, validarLeitura, validarLitros } from '../src/lib/calc'
+import { parseDuracao, validarHectares, validarMinutos, fmtDuracao, diferencaMedicao, kmPorLitro, litrosPorHora, maquinasDoTanque, saldo, ultimaLeitura, validarLeitura, validarLitros } from '../src/lib/calc'
 import { parseNum, diaSP, digitosLitros, litrosDeDigitos, mostrarLitros } from '../src/lib/format'
 
 const t = (h: number) => new Date(Date.UTC(2026, 9, 1, h)).toISOString()
@@ -102,5 +102,48 @@ describe('máscara de litros', () => {
   it('apagar remove o último dígito', () => {
     expect(digitosLitros('120,5')).toBe('1205')
     expect(litrosDeDigitos(digitosLitros('0,0'))).toBeNull()
+  })
+})
+
+import { alertas } from '../src/lib/alertas'
+describe('alertas', () => {
+  const nome = (id: string) => id
+  const a = (id: string, h: number, litros: number, horimetro: number | null, extra = {}) =>
+    ({ id, maquina_id: 'm1', data_hora: t(h), litros, horimetro, ...extra })
+  it('lançamento normal não gera alerta', () => {
+    expect(alertas([a('1', 1, 100, 1000), a('2', 5, 80, 1010)], nome)).toEqual([])
+  })
+  it('litros altos, horímetro que voltou e repetido', () => {
+    const r = alertas([a('1', 1, 100, 1000), a('2', 5, 1500, 990), a('3', 5.05, 1500, null)], nome).map((x) => x.id)
+    expect(r).toContain('2'); expect(r).toContain('3')
+  })
+  it('data no futuro ou muito antiga em relação ao envio', () => {
+    expect(alertas([a('1', 10, 50, null, { recebido_em: t(1) })], nome)).toHaveLength(1)
+    expect(alertas([a('1', 1, 50, null, { recebido_em: t(24 * 5) })], nome)).toHaveLength(1)
+    expect(alertas([a('1', 1, 50, null, { recebido_em: t(2) })], nome)).toEqual([])
+  })
+  it('consumo por hora muito acima da média da máquina', () => {
+    const base = [a('1', 1, 0.01, 1000), a('2', 2, 100, 1010), a('3', 3, 100, 1020), a('4', 4, 100, 1030), a('5', 5, 800, 1040)]
+    expect(alertas(base, nome).map((x) => x.id)).toEqual(['5'])
+  })
+})
+
+describe('produção', () => {
+  it('duração em vários formatos', () => {
+    expect(parseDuracao('1:30')).toBe(90)
+    expect(parseDuracao('1,5')).toBe(90)
+    expect(parseDuracao('2h')).toBe(120)
+    expect(parseDuracao('45 min')).toBe(45)
+    expect(parseDuracao('')).toBeNull()
+    expect(parseDuracao('abc')).toBeNull()
+    expect(fmtDuracao(95)).toBe('1h35')
+  })
+  it('validações', () => {
+    expect(validarHectares(0).erro).toBeTruthy()
+    expect(validarHectares(120).aviso).toBeTruthy()
+    expect(validarHectares(12.5)).toEqual({})
+    expect(validarMinutos(null).erro).toBeTruthy()
+    expect(validarMinutos(2000).erro).toBeTruthy()
+    expect(validarMinutos(700).aviso).toBeTruthy()
   })
 })

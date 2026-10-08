@@ -49,7 +49,7 @@ export function kmPorLitro(abast: AbastCalc[]): number | null {
 }
 
 // ponytail: limites fixos para "valor fora do normal"; se der alarme falso, criar limite por tipo de máquina
-export const LIMITES = { horimetro: 24, km: 1500, litros: 1000 }
+export const LIMITES = { horimetro: 24, km: 1500, litros: 1000, hectares: 80, minutos: 600 }
 
 export type Validacao = { erro?: string; aviso?: string }
 
@@ -82,3 +82,30 @@ export function ultimaLeitura(servidor: number | null | undefined, locais: (numb
 export function maquinasDoTanque<M extends { centro_custo_id: string | null }>(maquinas: M[], centros: string[] | undefined): M[] {
   return centros?.length ? maquinas.filter((m) => m.centro_custo_id != null && centros.includes(m.centro_custo_id)) : maquinas
 }
+
+export function validarHectares(ha: number | null): Validacao {
+  if (ha == null || Number.isNaN(ha) || ha <= 0) return { erro: 'Informe os hectares' }
+  if (ha > LIMITES.hectares) return { aviso: `${fmtNum(ha, 2)} ha num lançamento só é muito acima do normal. Confira.` }
+  return {}
+}
+
+/** "1:30" ou "1,5" (horas) ou "90" (minutos, só com "min") → minutos. Vazio/ inválido → null */
+export function parseDuracao(texto: string): number | null {
+  const t = texto.trim().toLowerCase().replace(',', '.')
+  if (!t) return null
+  const hm = t.match(/^(\d{1,2}):(\d{2})$/)
+  if (hm) return Number(hm[1]) * 60 + Number(hm[2])
+  const min = t.match(/^(\d+)\s*min$/)
+  if (min) return Number(min[1])
+  const h = Number(t.replace(/h$/, ''))
+  return Number.isFinite(h) && h > 0 ? Math.round(h * 60) : null
+}
+
+export function validarMinutos(min: number | null): Validacao {
+  if (min == null || min <= 0) return { erro: 'Informe a duração da parada (ex.: 1:30 ou 45 min)' }
+  if (min > 1440) return { erro: 'A parada não pode passar de 24 horas' }
+  if (min > LIMITES.minutos) return { aviso: 'Parada de mais de 10 horas. Confira.' }
+  return {}
+}
+
+export const fmtDuracao = (min: number) => `${Math.floor(min / 60)}h${String(min % 60).padStart(2, '0')}`

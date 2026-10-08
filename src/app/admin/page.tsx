@@ -2,7 +2,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Abastecimento, Movimento } from '@/lib/db'
 import { diferencaMedicao, kmPorLitro, litrosPorHora, saldo } from '@/lib/calc'
-import { fimDiaSP, fmtDataHora, fmtNum, hojeSP, inicioDiaSP } from '@/lib/format'
+import { alertas } from '@/lib/alertas'
+import { diaSP, fimDiaSP, fmtDataHora, fmtNum, hojeSP, inicioDiaSP } from '@/lib/format'
 import { baixarExcel, dataExcel, todos } from './dados'
 
 type TanqueRow = { id: string; nome: string; saldo_inicial: number; data_saldo_inicial: string; ativo: boolean }
@@ -74,9 +75,20 @@ export default function Painel() {
       lh: litrosPorHora(as), kml: kmPorLitro(as),
     })).sort((a, b) => b.litros - a.litros)
 
+    const alertasPeriodo = alertas(lista as any, (id) => maq.get(id)?.codigo ?? '?')
+    const porDia = new Map<string, number>()
+    for (const a of lista) porDia.set(diaSP(a.data_hora), (porDia.get(diaSP(a.data_hora)) ?? 0) + Number(a.litros))
+    const dias = [...porDia].sort(([x], [y]) => (x < y ? -1 : 1)).slice(-31)
+    const porCentro = new Map<string, { litros: number; n: number }>()
+    for (const a of lista) {
+      const k = centroDe(a.maquina_id) || 'Sem centro de custo'
+      const c = porCentro.get(k) ?? { litros: 0, n: 0 }
+      porCentro.set(k, { litros: c.litros + Number(a.litros), n: c.n + 1 })
+    }
+    const centrosRel = [...porCentro].map(([nome, c]) => ({ nome, ...c })).sort((x, y) => y.litros - x.litros)
     const entradas = d.movs.filter((m) => m.tipo === 'entrada' && noPeriodo(m) && (!tanque || m.tanque_id === tanque))
     return {
-      saldos, medicoes, lista, consumo, maq, pessoa, tq, centroDe,
+      alertasPeriodo, dias, centrosRel, saldos, medicoes, lista, consumo, maq, pessoa, tq, centroDe,
       totalAbast: lista.reduce((s, a) => s + Number(a.litros), 0),
       totalEntradas: entradas.reduce((s, m) => s + Number(m.litros), 0),
     }
@@ -92,6 +104,7 @@ export default function Painel() {
       Horímetro: a.horimetro == null ? null : Number(a.horimetro), Km: a.km == null ? null : Number(a.km),
       Observação: a.observacao, 'Lançado offline': a.criado_offline ? 'sim' : 'não',
     })),
+    'Por centro de custo': v.centrosRel.map((c) => ({ 'Centro de custo': c.nome, Abastecimentos: c.n, Litros: Math.round(c.litros * 100) / 100 })),
     'Consumo por máquina': v.consumo.map((c) => ({
       Máquina: c.m?.codigo, Nome: c.m?.nome, 'Centro de custo': c.centro, Abastecimentos: c.n, Litros: c.litros,
       'L/h': c.lh == null ? null : Math.round(c.lh * 100) / 100, 'km/L': c.kml == null ? null : Math.round(c.kml * 100) / 100,
@@ -101,7 +114,7 @@ export default function Painel() {
   async function backupCompleto() {
     setBackup(true)
     try {
-      const nomes = ['va_perfis', 'va_maquinas', 'va_tanques', 'va_abastecimentos', 'va_tanque_movimentos']
+      const nomes = ['va_perfis', 'va_maquinas', 'va_centros_custo', 'va_tanques', 'va_tanque_centros', 'va_abastecimentos', 'va_tanque_movimentos', 'va_servicos', 'va_locais', 'va_motivos_parada', 'va_producoes', 'va_paradas']
       const tabelas = await Promise.all(nomes.map((n) => todos(n)))
       await baixarExcel(`backup_va_${hojeSP()}.xlsx`, Object.fromEntries(nomes.map((n, i) => [n, tabelas[i]])))
     } catch (e) { alert('Falha no backup: ' + (e as Error).message) }
@@ -162,6 +175,36 @@ export default function Painel() {
 
       <p>No período: <b>{fmtNum(v.totalAbast, 0)} L</b> abastecidos · <b>{fmtNum(v.totalEntradas, 0)} L</b> de entrada no tanque</p>
 
+      {v.alertasPeriodo.length > 0 && (
+        <section className="rounded-2xl border-2 border-diesel bg-diesel-claro p-4">
+          <h2 className="font-display text-2xl font-bold text-tinta">Conferir {v.alertasPeriodo.length} {v.alertasPeriodo.length > 1 ? 'lançamentos' : 'lançamento'}</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            {v.alertasPeriodo.slice(0, 8).map((a) => <li key={a.id + a.texto}>{a.texto}</li>)}
+          </ul>
+          <a href="/admin/lancamentos" className="mt-3 inline-block font-semibold text-mata underline">Abrir lançamentos para corrigir</a>
+        </section>
+      )}
+
+      {v.dias.length > 0 && (
+        <section className="cartao">
+          <h2 className="mb-3 font-display text-2xl font-bold text-mata-escuro">Litros por dia</h2>
+          <div className="flex h-40 items-end gap-1" role="img" aria-label="Gráfico de litros abastecidos por dia">
+            {v.dias.map(([dia, litros]) => {
+              const max = Math.max(...v.dias.map(([, l]) => l))
+              return (
+                <div key={dia} className="flex h-full flex-1 flex-col justify-end" title={`${dia.slice(8)}/${dia.slice(5, 7)}: ${fmtNum(litros, 0)} L`}>
+                  <div className="rounded-t bg-mata" style={{ height: `${Math.max(3, (litros / max) * 100)}%` }} />
+                </div>
+              )
+            })}
+          </div>
+          <div className="mt-1 flex justify-between text-[13px] text-tinta/55">
+            <span>{v.dias[0][0].slice(8)}/{v.dias[0][0].slice(5, 7)}</span>
+            <span>{v.dias[v.dias.length - 1][0].slice(8)}/{v.dias[v.dias.length - 1][0].slice(5, 7)}</span>
+          </div>
+        </section>
+      )}
+
       <section className="cartao">
         <h2 className="mb-3 font-display text-2xl font-bold text-mata-escuro">Consumo por máquina</h2>
         <div className="overflow-x-auto">
@@ -178,6 +221,22 @@ export default function Painel() {
           </table>
         </div>
         <p className="mt-1 text-xs text-tinta/55">L/h e km/L: litros abastecidos depois do primeiro registro com leitura ÷ diferença de leitura no período (método tanque cheio).</p>
+      </section>
+
+      <section className="cartao">
+        <h2 className="mb-3 font-display text-2xl font-bold text-mata-escuro">Por centro de custo</h2>
+        <div className="overflow-x-auto">
+          <table className="tabela">
+            <thead><tr><th>Centro de custo</th><th>Abast.</th><th>Litros</th><th>% do total</th></tr></thead>
+            <tbody>
+              {v.centrosRel.map((c) => (
+                <tr key={c.nome}><td className="font-semibold">{c.nome}</td><td>{c.n}</td><td className="num">{fmtNum(c.litros, 1)}</td>
+                  <td className="num">{v.totalAbast ? fmtNum((c.litros / v.totalAbast) * 100, 1) : '—'}%</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-1 text-[13px] text-tinta/55">Escolha as datas acima para fechar o mês. O Excel exportado inclui esta tabela.</p>
       </section>
 
       {v.medicoes.length > 0 && (
@@ -199,24 +258,13 @@ export default function Painel() {
         </section>
       )}
 
-      <section className="cartao">
-        <h2 className="mb-3 font-display text-2xl font-bold text-mata-escuro">Abastecimentos ({v.lista.length})</h2>
-        <div className="overflow-x-auto">
-          <table className="tabela">
-            <thead><tr><th>Data/hora</th><th>Máquina</th><th>Motorista</th><th>Litros</th><th>Horímetro</th><th>Km</th><th>Obs.</th></tr></thead>
-            <tbody>
-              {v.lista.map((a) => (
-                <tr key={a.id}>
-                  <td>{fmtDataHora(a.data_hora)}{a.criado_offline && <span title="lançado sem sinal"> ✈</span>}</td>
-                  <td>{v.maq.get(a.maquina_id)?.codigo}</td><td>{v.pessoa.get(a.user_id)}</td>
-                  <td>{fmtNum(Number(a.litros), 2)}</td><td>{fmtNum(a.horimetro == null ? null : Number(a.horimetro))}</td>
-                  <td>{fmtNum(a.km == null ? null : Number(a.km))}</td><td>{a.observacao}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      <a href="/admin/lancamentos" className="cartao flex items-center justify-between gap-4 hover:bg-mata-claro">
+        <span>
+          <b className="font-display text-xl text-mata-escuro">{v.lista.length} abastecimentos no período</b>
+          <span className="block text-tinta/65">Ver a lista completa e excluir lançamentos errados</span>
+        </span>
+        <span className="font-semibold text-mata">Abrir lançamentos</span>
+      </a>
       <p className="text-xs text-tinta/55">Dados carregados ao abrir a página. Recarregue para atualizar.</p>
     </div>
   )

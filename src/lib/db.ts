@@ -1,7 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 
-// Fase 2: acrescentar 'va_producoes' aqui; fila e envio já são genéricos por tabela.
-export type Tabela = 'va_abastecimentos' | 'va_tanque_movimentos'
+export type Tabela = 'va_abastecimentos' | 'va_tanque_movimentos' | 'va_producoes' | 'va_paradas'
 
 export type Abastecimento = {
   id: string; user_id: string; tanque_id: string; maquina_id: string; data_hora: string
@@ -12,12 +11,23 @@ export type Movimento = {
   nota_fiscal: string | null; data_hora: string; criado_offline: boolean
 }
 
+export type Producao = {
+  id: string; user_id: string; data_hora: string; maquina_id: string; servico_id: string; local_id: string
+  hectares: number; observacao: string | null; criado_offline: boolean
+}
+export type Parada = {
+  id: string; user_id: string; data_hora: string; maquina_id: string; motivo_id: string
+  minutos: number; observacao: string | null; criado_offline: boolean
+}
+export type Nome = { id: string; nome: string }
+export type Payload = Abastecimento | Movimento | Producao | Parada
+
 /** Tudo é gravado aqui primeiro; `status` vira 'enviado' só depois que o servidor confirmou. */
 export type Registro = {
   id: string
   tabela: Tabela
   status: 'pendente' | 'enviado'
-  payload: Abastecimento | Movimento
+  payload: Payload
   data_hora: string
   enviado_em?: number
 }
@@ -38,6 +48,9 @@ class BancoLocal extends Dexie {
   tanques!: Table<Tanque, string>
   leituras!: Table<Leitura, string>
   saldos!: Table<Saldo, string>
+  servicos!: Table<Nome, string>
+  locais!: Table<Nome, string>
+  motivos!: Table<Nome, string>
   meta!: Table<{ chave: string; valor: any }, string>
 
   constructor() {
@@ -50,12 +63,14 @@ class BancoLocal extends Dexie {
       saldos: 'tanque_id',
       meta: 'chave',
     })
+    // v2: cadastros da produção
+    this.version(2).stores({ servicos: 'id', locais: 'id', motivos: 'id' })
   }
 }
 
 export const db = new BancoLocal()
 
-export async function salvarLocal(tabela: Tabela, payload: Abastecimento | Movimento) {
+export async function salvarLocal(tabela: Tabela, payload: Payload) {
   await db.registros.add({ id: payload.id, tabela, status: 'pendente', payload, data_hora: payload.data_hora })
 }
 

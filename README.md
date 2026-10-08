@@ -1,6 +1,8 @@
 # V. A. Ribas — App de campo
 
-PWA para celular, feito para funcionar **sem internet**. Fase 1: abastecimento do comboio de diesel.
+PWA para celular, feito para funcionar **sem internet**.
+- **Motorista:** abastecimento do comboio de diesel e controle do tanque.
+- **Operador:** produção em hectares (máquina, serviço, talhão) e paradas com motivo.
 Next.js 14 + Supabase + IndexedDB (Dexie). Deploy na Vercel.
 
 ## Como funciona o offline
@@ -15,7 +17,8 @@ Next.js 14 + Supabase + IndexedDB (Dexie). Deploy na Vercel.
 ## 1. Banco (Supabase)
 
 O banco já recebeu as migrations. Para outro projeto, rode no SQL Editor, nesta ordem:
-`supabase/migration.sql` e depois `supabase/migration_002_centros_custo.sql`.
+`supabase/migration.sql`, `supabase/migration_002_centros_custo.sql` e `supabase/migration_003_comboio_do_motorista.sql` e `supabase/migration_004_producao.sql`
+(a 003 também fecha o acesso público às tabelas do sistema antigo, se existirem).
 
 Em **Authentication → Sign In / Providers**:
 - desligue **Allow new users to sign up** (os usuários são criados pelo painel);
@@ -56,10 +59,13 @@ Em **Authentication → Sign In / Providers**:
    Comboio sem nenhum centro marcado vê todas as máquinas.
 2. Painel → **Máquinas e comboios**: ajuste o "Comboio" (saldo inicial e data) e cadastre as máquinas
    (prefixo, nome e centro de custo).
-3. No celular, abra o endereço da Vercel, faça login e instale o app:
+3. Painel → **Serviços e talhões**: ajuste os serviços e motivos de parada sugeridos e cadastre os talhões.
+   Crie os operadores em **Usuários** com o perfil `operador`.
+4. Em **Usuários**, escolha o comboio de cada motorista (ou deixe "Escolhe sozinho").
+5. No celular, abra o endereço da Vercel, faça login e instale o app:
    - Android/Chrome: menu ⋮ → **Instalar app**
    - iPhone/Safari: Compartilhar → **Adicionar à Tela de Início**
-4. Com internet, toque em **Enviar** uma vez para baixar os cadastros.
+6. Com internet, toque em **Enviar** uma vez para baixar os cadastros.
 
 ## Backup
 
@@ -74,12 +80,6 @@ npm test         # cálculo de saldo, L/h, km/L, validações e sincronização 
 ```
 
 Variáveis locais em `.env` (mesmos nomes da tabela acima).
-
-## Fase 2 (produção dos operadores)
-
-A fila e o envio são genéricos por tabela (`src/lib/db.ts` → `Tabela`). Para a Fase 2: criar `va_producoes`
-com o mesmo padrão (id UUID do celular, RLS de insert/select próprio), acrescentar o nome em `Tabela`
-e uma aba nova em `src/app/page.tsx`.
 
 ## Estrutura
 

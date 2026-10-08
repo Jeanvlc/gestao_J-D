@@ -2,7 +2,7 @@
 import { usePathname } from 'next/navigation'
 
 const ITENS = [
-  ['/admin', 'Painel'], ['/admin/maquinas', 'Máquinas e comboios'], ['/admin/centros', 'Centros de custo'],
+  ['/admin', 'Painel'], ['/admin/lancamentos', 'Abastecimentos'], ['/admin/producao', 'Produção'], ['/admin/servicos', 'Serviços e talhões'], ['/admin/maquinas', 'Máquinas e comboios'], ['/admin/centros', 'Centros de custo'],
   ['/admin/usuarios', 'Usuários'], ['/', 'App do campo'],
 ] as const
 

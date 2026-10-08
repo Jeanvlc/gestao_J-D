@@ -1,9 +1,9 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, salvarLocal, type Abastecimento, type Maquina, type Movimento, type Perfil, type Tanque as TanqueT } from '@/lib/db'
+import { db, salvarLocal, type Abastecimento, type Maquina, type Movimento, type Nome, type Parada, type Perfil, type Producao, type Tanque as TanqueT } from '@/lib/db'
 import { sincronizar, apagarPendente, type Cliente } from '@/lib/sync'
-import { diferencaMedicao, maquinasDoTanque, saldo, ultimaLeitura, validarLeitura, validarLitros } from '@/lib/calc'
+import { diferencaMedicao, fmtDuracao, maquinasDoTanque, parseDuracao, saldo, ultimaLeitura, validarHectares, validarLeitura, validarLitros, validarMinutos } from '@/lib/calc'
 import { diaSP, digitosLitros, fmtDataHora, fmtHora, fmtNum, hojeSP, litrosDeDigitos, mostrarLitros, parseNum } from '@/lib/format'
 import { createClient } from '@/lib/supabase/client'
 import { IconeBusca, IconeFechar, IconeSeta } from './icones'
@@ -27,7 +27,7 @@ const Titulo = ({ children }: { children: React.ReactNode }) => (
 )
 
 /** Mostrador de litros no estilo de bomba: digitar 12050 mostra 120,50 */
-function Mostrador({ rotulo, digitos, onChange }: { rotulo: string; digitos: string; onChange: (d: string) => void }) {
+function Mostrador({ rotulo, digitos, onChange, unidade = 'L' }: { rotulo: string; digitos: string; onChange: (d: string) => void; unidade?: string }) {
   return (
     <label className="block rounded-2xl bg-mata-escuro px-4 pb-3 pt-3 text-white">
       <span className="text-[15px] font-semibold text-white/70">{rotulo}</span>
@@ -37,15 +37,20 @@ function Mostrador({ rotulo, digitos, onChange }: { rotulo: string; digitos: str
           onChange={(e) => onChange(digitosLitros(e.target.value))}
           className="num w-full min-w-0 bg-transparent text-right font-display text-[56px] font-bold leading-none text-diesel placeholder:text-diesel/25 focus:outline-none"
         />
-        <span className="font-display text-2xl font-bold text-white/60">L</span>
+        <span className="font-display text-2xl font-bold text-white/60">{unidade}</span>
       </span>
     </label>
   )
 }
 
 /** Comboio escolhido (lembrado no aparelho). Com um só, não aparece. */
-function useTanque(): [TanqueT | null, JSX.Element | null] {
-  const tanques = useLiveQuery(() => db.tanques.toArray(), [])
+function useTanque(): [TanqueT | null, React.ReactElement | null] {
+  // motorista preso a um comboio só enxerga o dele
+  const tanques = useLiveQuery(async () => {
+    const todos = await db.tanques.toArray()
+    const meu: string | null = (await db.meta.get('meu_tanque'))?.valor ?? null
+    return meu && todos.some((t) => t.id === meu) ? todos.filter((t) => t.id === meu) : todos
+  }, [])
   const [escolhido, setEscolhido] = useState<string | null>(null)
   useEffect(() => { try { setEscolhido(localStorage.getItem('va-tanque')) } catch {} }, [])
   if (!tanques?.length) return [null, null]
@@ -64,13 +69,21 @@ function useTanque(): [TanqueT | null, JSX.Element | null] {
 
 /** Campo de máquina: abre uma lista com busca */
 function SeletorMaquina({ maquinas, valor, onChange }: { maquinas: Maquina[]; valor: Maquina | null; onChange: (m: Maquina) => void }) {
+  const recentes = useLiveQuery(async () => {
+    const regs = (await db.registros.where('tabela').equals('va_abastecimentos').toArray())
+      .sort((a, b) => Date.parse(b.data_hora) - Date.parse(a.data_hora))
+    return [...new Set(regs.map((r) => (r.payload as Abastecimento).maquina_id))].slice(0, 5)
+  }, [], [] as string[])
   const [aberto, setAberto] = useState(false)
   const [busca, setBusca] = useState('')
   const campoBusca = useRef<HTMLInputElement>(null)
   useEffect(() => { if (aberto) { setBusca(''); campoBusca.current?.focus() } }, [aberto])
 
   const termo = busca.trim().toLowerCase()
-  const lista = maquinas.filter((m) => !termo || m.codigo.toLowerCase().includes(termo) || m.nome.toLowerCase().includes(termo))
+  const filtradas = maquinas.filter((m) => !termo || m.codigo.toLowerCase().includes(termo) || m.nome.toLowerCase().includes(termo))
+  // sem busca: as últimas usadas por este aparelho vêm primeiro
+  const lista = termo ? filtradas : [...filtradas.filter((m) => recentes.includes(m.id)).sort((a, b) => recentes.indexOf(a.id) - recentes.indexOf(b.id)), ...filtradas.filter((m) => !recentes.includes(m.id))]
+  const nRecentes = termo ? 0 : filtradas.filter((m) => recentes.includes(m.id)).length
 
   return (
     <div>
@@ -97,8 +110,10 @@ function SeletorMaquina({ maquinas, valor, onChange }: { maquinas: Maquina[]; va
             <button onClick={() => setAberto(false)} aria-label="Fechar" className="rounded-xl p-3 text-white active:bg-mata-escuro"><IconeFechar /></button>
           </div>
           <ul className="flex-1 overflow-y-auto px-3 py-2">
-            {lista.map((m) => (
+            {lista.map((m, i) => (
               <li key={m.id}>
+                {nRecentes > 0 && i === 0 && <p className="px-1 pb-1 pt-1 text-[15px] font-semibold text-tinta/55">Usadas por último</p>}
+                {nRecentes > 0 && i === nRecentes && <p className="px-1 pb-1 pt-3 text-[15px] font-semibold text-tinta/55">Todas</p>}
                 <button onClick={() => { onChange(m); setAberto(false) }}
                   className={`mb-1.5 flex w-full items-baseline gap-3 rounded-xl px-4 py-3.5 text-left active:bg-mata-claro ${m.id === valor?.id ? 'bg-mata-claro' : 'bg-white'}`}>
                   <span className="font-display text-xl font-bold">{m.codigo}</span>
@@ -228,7 +243,7 @@ export function Tanque({ perfil }: { perfil: Perfil }) {
     // soma ao saldo baixado o que o servidor ainda não tinha quando baixamos
     const baixado: number = (await db.meta.get('baixado_em'))?.valor ?? 0
     const locais = (await db.registros.toArray()).filter((r) =>
-      r.payload.tanque_id === tanque.id && (r.status === 'pendente' || (r.enviado_em ?? 0) > baixado))
+      'tanque_id' in r.payload && r.payload.tanque_id === tanque.id && (r.status === 'pendente' || (r.enviado_em ?? 0) > baixado))
     const abast = locais.filter((r) => r.tabela === 'va_abastecimentos').map((r) => r.payload as Abastecimento)
     const movs = locais.filter((r) => r.tabela === 'va_tanque_movimentos').map((r) => r.payload as Movimento)
     const desde = new Date(0).toISOString()
@@ -288,8 +303,155 @@ export function Tanque({ perfil }: { perfil: Perfil }) {
   )
 }
 
+/** Lista com busca em tela cheia (serviço, talhão, motivo) */
+function Seletor({ rotulo, itens, valor, onChange }: { rotulo: string; itens: Nome[]; valor: string; onChange: (id: string) => void }) {
+  const [aberto, setAberto] = useState(false)
+  const [busca, setBusca] = useState('')
+  const campo = useRef<HTMLInputElement>(null)
+  useEffect(() => { if (aberto) { setBusca(''); campo.current?.focus() } }, [aberto])
+  const atual = itens.find((i) => i.id === valor)
+  const termo = busca.trim().toLowerCase()
+  const lista = itens.filter((i) => !termo || i.nome.toLowerCase().includes(termo))
+  return (
+    <div>
+      <span className="rotulo">{rotulo}</span>
+      <button onClick={() => setAberto(true)} aria-haspopup="dialog" className="flex w-full items-center gap-3 rounded-xl border-2 border-tinta/15 bg-white px-4 py-3.5 text-left">
+        <span className={`flex-1 truncate text-lg ${atual ? 'font-semibold' : 'text-tinta/40'}`}>{atual?.nome ?? `Escolha ${rotulo.toLowerCase()}`}</span>
+        <IconeSeta />
+      </button>
+      {aberto && (
+        <div role="dialog" aria-modal="true" aria-label={rotulo} className="fixed inset-0 z-30 mx-auto flex max-w-lg flex-col bg-fundo">
+          <div className="flex items-center gap-2 bg-mata px-3 py-3">
+            <label className="flex flex-1 items-center gap-2 rounded-xl bg-white px-3">
+              <span className="text-tinta/40"><IconeBusca /></span>
+              <input ref={campo} value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar" aria-label={`Buscar ${rotulo.toLowerCase()}`} className="w-full bg-transparent py-3 text-lg focus:outline-none" />
+            </label>
+            <button onClick={() => setAberto(false)} aria-label="Fechar" className="rounded-xl p-3 text-white active:bg-mata-escuro"><IconeFechar /></button>
+          </div>
+          <ul className="flex-1 overflow-y-auto px-3 py-2">
+            {lista.map((i) => (
+              <li key={i.id}>
+                <button onClick={() => { onChange(i.id); setAberto(false) }} className={`mb-1.5 w-full rounded-xl px-4 py-3.5 text-left text-lg font-semibold active:bg-mata-claro ${i.id === valor ? 'bg-mata-claro' : 'bg-white'}`}>{i.nome}</button>
+              </li>
+            ))}
+            {!lista.length && <li className="px-2 py-8 text-center text-tinta/60">{itens.length ? `Nada com "${busca}".` : 'Nada cadastrado ainda. Peça ao administrador.'}</li>}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function useMaquinas() {
+  return useLiveQuery(() => db.maquinas.toArray().then((ms) => ms.sort((a, b) => a.codigo.localeCompare(b.codigo, 'pt-BR', { numeric: true }))), [], [] as Maquina[])
+}
+
+export function Produzir({ perfil }: { perfil: Perfil }) {
+  const maquinas = useMaquinas()
+  const servicos = useLiveQuery(() => db.servicos.toArray(), [], [] as Nome[])
+  const locais = useLiveQuery(() => db.locais.toArray(), [], [] as Nome[])
+  const [maq, setMaq] = useState<Maquina | null>(null)
+  const [servico, setServico] = useState('')
+  const [local, setLocal] = useState('')
+  const [ha, setHa] = useState('')
+  const [obs, setObs] = useState('')
+  const [avisos, setAvisos] = useState<string[]>([])
+  const [msg, setMsg] = useState<Msg>(null)
+
+  // lembra o último serviço e talhão: o operador costuma repetir
+  useEffect(() => { try { setServico(localStorage.getItem('va-servico') ?? ''); setLocal(localStorage.getItem('va-local') ?? '') } catch {} }, [])
+
+  async function salvar() {
+    setMsg(null)
+    if (!maq) return setMsg({ erro: 'Escolha a máquina.' })
+    if (!servicos.some((x) => x.id === servico)) return setMsg({ erro: 'Escolha o serviço.' })
+    if (!locais.some((x) => x.id === local)) return setMsg({ erro: 'Escolha o talhão.' })
+    const H = litrosDeDigitos(ha)
+    const v = validarHectares(H)
+    if (v.erro) return setMsg({ erro: v.erro })
+    if (v.aviso && avisos[0] !== v.aviso) return setAvisos([v.aviso])
+    await salvarLocal('va_producoes', {
+      id: novoId(), user_id: perfil.id, data_hora: agora(), maquina_id: maq.id, servico_id: servico, local_id: local,
+      hectares: H!, observacao: obs.trim() || null, criado_offline: !navigator.onLine,
+    })
+    try { localStorage.setItem('va-servico', servico); localStorage.setItem('va-local', local) } catch {}
+    setMsg({ ok: `Produção salva: ${maq.codigo}, ${fmtNum(H, 2)} ha.` })
+    setHa(''); setObs(''); setAvisos([])
+    sincronizar(sb())
+  }
+
+  if (!maquinas.length) return <Aviso msg={{ erro: SEM_CADASTRO }} />
+  return (
+    <div className="space-y-5">
+      <Titulo>Produção</Titulo>
+      <SeletorMaquina maquinas={maquinas} valor={maq} onChange={setMaq} />
+      <Seletor rotulo="Serviço" itens={servicos} valor={servico} onChange={setServico} />
+      <Seletor rotulo="Talhão" itens={locais} valor={local} onChange={setLocal} />
+      <Mostrador rotulo="Área trabalhada" digitos={ha} onChange={(d) => { setHa(d); setAvisos([]) }} unidade="ha" />
+      <label className="block">
+        <span className="rotulo">Observação <span className="font-normal text-tinta/45">(opcional)</span></span>
+        <input className="campo" value={obs} onChange={(e) => setObs(e.target.value)} />
+      </label>
+      {avisos.length > 0 && <div role="alert" className="rounded-xl bg-diesel-claro px-4 py-3 font-medium">{avisos[0]}</div>}
+      <Aviso msg={msg} />
+      <button className="btn w-full" onClick={salvar}>{avisos.length ? 'Confirmar e salvar' : 'Salvar produção'}</button>
+    </div>
+  )
+}
+
+export function Parar({ perfil }: { perfil: Perfil }) {
+  const maquinas = useMaquinas()
+  const motivos = useLiveQuery(() => db.motivos.toArray(), [], [] as Nome[])
+  const [maq, setMaq] = useState<Maquina | null>(null)
+  const [motivo, setMotivo] = useState('')
+  const [duracao, setDuracao] = useState('')
+  const [obs, setObs] = useState('')
+  const [avisos, setAvisos] = useState<string[]>([])
+  const [msg, setMsg] = useState<Msg>(null)
+
+  async function salvar() {
+    setMsg(null)
+    if (!maq) return setMsg({ erro: 'Escolha a máquina.' })
+    if (!motivos.some((x) => x.id === motivo)) return setMsg({ erro: 'Escolha o motivo da parada.' })
+    const min = parseDuracao(duracao)
+    const v = validarMinutos(min)
+    if (v.erro) return setMsg({ erro: v.erro })
+    if (v.aviso && avisos[0] !== v.aviso) return setAvisos([v.aviso])
+    await salvarLocal('va_paradas', {
+      id: novoId(), user_id: perfil.id, data_hora: agora(), maquina_id: maq.id, motivo_id: motivo,
+      minutos: min!, observacao: obs.trim() || null, criado_offline: !navigator.onLine,
+    })
+    setMsg({ ok: `Parada salva: ${maq.codigo}, ${fmtDuracao(min!)}.` })
+    setDuracao(''); setObs(''); setMotivo(''); setAvisos([])
+    sincronizar(sb())
+  }
+
+  if (!maquinas.length) return <Aviso msg={{ erro: SEM_CADASTRO }} />
+  return (
+    <div className="space-y-5">
+      <Titulo>Parada</Titulo>
+      <SeletorMaquina maquinas={maquinas} valor={maq} onChange={setMaq} />
+      <Seletor rotulo="Motivo" itens={motivos} valor={motivo} onChange={setMotivo} />
+      <label className="block">
+        <span className="rotulo">Quanto tempo parou?</span>
+        <input className="campo num" value={duracao} onChange={(e) => { setDuracao(e.target.value); setAvisos([]) }} placeholder="Ex.: 1:30 ou 45 min" />
+      </label>
+      <label className="block">
+        <span className="rotulo">Observação <span className="font-normal text-tinta/45">(opcional)</span></span>
+        <input className="campo" value={obs} onChange={(e) => setObs(e.target.value)} />
+      </label>
+      {avisos.length > 0 && <div role="alert" className="rounded-xl bg-diesel-claro px-4 py-3 font-medium">{avisos[0]}</div>}
+      <Aviso msg={msg} />
+      <button className="btn w-full" onClick={salvar}>{avisos.length ? 'Confirmar e salvar' : 'Salvar parada'}</button>
+    </div>
+  )
+}
+
 export function Historico({ perfil }: { perfil: Perfil }) {
-  const maquinas = useLiveQuery(() => db.maquinas.toArray(), [], [])
+  const maquinas = useLiveQuery(() => db.maquinas.toArray(), [], [] as Maquina[])
+  const servicos = useLiveQuery(() => db.servicos.toArray(), [], [] as Nome[])
+  const locais = useLiveQuery(() => db.locais.toArray(), [], [] as Nome[])
+  const motivos = useLiveQuery(() => db.motivos.toArray(), [], [] as Nome[])
   const regs = useLiveQuery(async () => {
     const hoje = hojeSP()
     return (await db.registros.toArray())
@@ -303,32 +465,48 @@ export function Historico({ perfil }: { perfil: Perfil }) {
   }
 
   if (!regs) return null
-  const total = regs.filter((r) => r.tabela === 'va_abastecimentos').reduce((s, r) => s + Number(r.payload.litros), 0)
+  const total = regs.filter((r) => r.tabela === 'va_abastecimentos').reduce((s, r) => s + Number((r.payload as Abastecimento).litros), 0)
+  const totalHa = regs.filter((r) => r.tabela === 'va_producoes').reduce((s, r) => s + Number((r.payload as Producao).hectares), 0)
+  const nome = (xs: Nome[], id: string) => xs.find((x) => x.id === id)?.nome ?? ''
+  const cod = (id: string) => maquinas.find((x) => x.id === id)?.codigo ?? 'Máquina'
 
   return (
     <div className="space-y-4">
       <div className="flex items-baseline justify-between">
         <Titulo>Hoje</Titulo>
-        {total > 0 && <span className="num text-[15px] text-tinta/60">{fmtNum(total, 0)} L abastecidos</span>}
+        <span className="num text-[15px] text-tinta/60">
+          {total > 0 && `${fmtNum(total, 0)} L abastecidos`}{total > 0 && totalHa > 0 && ' · '}{totalHa > 0 && `${fmtNum(totalHa, 2)} ha feitos`}
+        </span>
       </div>
-      {!regs.length && <p className="rounded-2xl bg-white px-4 py-8 text-center text-tinta/60">Nenhum lançamento hoje. Os abastecimentos que você salvar aparecem aqui.</p>}
+      {!regs.length && <p className="rounded-2xl bg-white px-4 py-8 text-center text-tinta/60">Nenhum lançamento hoje. O que você salvar aparece aqui.</p>}
       <ul className="space-y-2">
         {regs.map((r) => {
-          const abast = r.tabela === 'va_abastecimentos'
-          const a = r.payload as Abastecimento, mv = r.payload as Movimento
-          const m = abast ? maquinas.find((x) => x.id === a.maquina_id) : null
+          let titulo = '', sub = '', detalhe = '', cor = 'border-mata'
+          if (r.tabela === 'va_abastecimentos') {
+            const a = r.payload as Abastecimento
+            titulo = cod(a.maquina_id); sub = maquinas.find((x) => x.id === a.maquina_id)?.nome ?? ''; cor = 'border-diesel'
+            detalhe = `${fmtNum(a.litros, 2)} L${a.horimetro != null ? `, ${fmtNum(a.horimetro)} h` : ''}${a.km != null ? `, ${fmtNum(a.km)} km` : ''}`
+          } else if (r.tabela === 'va_tanque_movimentos') {
+            const m = r.payload as Movimento
+            titulo = m.tipo === 'entrada' ? 'Entrada' : 'Medição'; sub = m.nota_fiscal ? `NF ${m.nota_fiscal}` : 'no tanque'
+            detalhe = `${fmtNum(m.litros, 2)} L`
+          } else if (r.tabela === 'va_producoes') {
+            const p = r.payload as Producao
+            titulo = cod(p.maquina_id); sub = `${nome(servicos, p.servico_id)}, ${nome(locais, p.local_id)}`; cor = 'border-mata-escuro'
+            detalhe = `${fmtNum(p.hectares, 2)} ha`
+          } else {
+            const p = r.payload as Parada
+            titulo = cod(p.maquina_id); sub = `Parada: ${nome(motivos, p.motivo_id)}`; cor = 'border-alerta'
+            detalhe = fmtDuracao(p.minutos)
+          }
           return (
-            <li key={r.id} className={`flex items-center gap-3 rounded-2xl border-l-[6px] bg-white py-3 pl-3 pr-3 ${abast ? 'border-diesel' : 'border-mata'}`}>
+            <li key={r.id} className={`flex items-center gap-3 rounded-2xl border-l-[6px] bg-white py-3 pl-3 pr-3 ${cor}`}>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
-                  <span className="font-display text-xl font-bold">{abast ? (m?.codigo ?? 'Máquina') : mv.tipo === 'entrada' ? 'Entrada' : 'Medição'}</span>
-                  <span className="truncate text-tinta/60">{abast ? m?.nome : mv.nota_fiscal ? `NF ${mv.nota_fiscal}` : 'no tanque'}</span>
+                  <span className="font-display text-xl font-bold">{titulo}</span>
+                  <span className="truncate text-tinta/60">{sub}</span>
                 </div>
-                <div className="num text-[15px] text-tinta/70">
-                  {fmtHora(r.data_hora)} — <b className="text-tinta">{fmtNum(r.payload.litros, 2)} L</b>
-                  {abast && a.horimetro != null && `, ${fmtNum(a.horimetro)} h`}
-                  {abast && a.km != null && `, ${fmtNum(a.km)} km`}
-                </div>
+                <div className="num text-[15px] text-tinta/70">{fmtHora(r.data_hora)} — <b className="text-tinta">{detalhe}</b></div>
                 <span className={`mt-1 inline-block rounded-full px-2.5 py-0.5 text-[13px] font-semibold ${r.status === 'pendente' ? 'bg-diesel-claro text-diesel-escuro' : 'bg-mata-claro text-mata'}`}>
                   {r.status === 'pendente' ? 'Aguardando envio' : 'Enviado'}
                 </span>
